@@ -1,0 +1,60 @@
+/* Background styling */
+.root {
+    -fx-background-color: #f2f2f2; /* Slightly brighter than before */
+    -fx-alignment: center; /* Center content */
+}
+
+/* VBox styling for the form */
+#loginForm {
+    -fx-background-color: #ffffff; /* Bright white for the VBox */
+    -fx-padding: 20px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 5); /* Drop shadow effect */
+    -fx-alignment: center; /* Center content inside VBox */
+}
+
+/* Label styling */
+.label {
+    -fx-font-family: 'Segoe UI', sans-serif; /* Modern font */
+    -fx-font-size: 14px;
+    -fx-text-fill: #555;
+}
+
+#welcomeLabel {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+/* TextField and PasswordField styling */
+.text-field, .password-field {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 14px;
+    -fx-background-color: #f9f9f9;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10px;
+}
+
+/* Button styling */
+.button {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5px;
+    -fx-padding: 10px 20px;
+}
+
+#loginButton {
+    -fx-background-color: #000000; /* Black for the Login button */
+    -fx-text-fill: white;
+}
+
+#registerButton {
+    -fx-background-color: transparent;
+    -fx-text-fill: #007BFF; /* Blue for the Register button */
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
