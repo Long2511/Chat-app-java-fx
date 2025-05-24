@@ -58,22 +58,30 @@ public class ServerBackend {
             // Remove /api prefix for easier matching
             if (path.startsWith("/api/")) path = path.substring(4);
 
-
             // User API: GET /users
             if (method.equals("GET") && path.equals("/users")) {
-//                UserApiHandler.handleGetUsers(out);
+                String response = UserApiHandler.handleGetUsers();
+                out.write(response + "\n");
+                out.flush();
                 return;
             }
             // Auth API: POST /auth/register
             if (method.equals("POST") && path.equals("/auth/register")) {
-//                AuthApiHandler.handleRegister(in, out);
+                String body = ApiUtils.readBody(in);
+                String response = AuthApiHandler.handleRegister(body);
+                out.write(response + "\n");
+                out.flush();
                 return;
             }
             // Auth API: POST /auth/login
             if (method.equals("POST") && path.equals("/auth/login")) {
-//                AuthApiHandler.handleLogin(in, out);
+                String body = ApiUtils.readBody(in);
+                String response = AuthApiHandler.handleLogin(body);
+                out.write(response + "\n");
+                out.flush();
                 return;
             }
+
             // Auth API: POST /auth/logout
             if (method.equals("POST") && path.equals("/auth/logout")) {
 //                AuthApiHandler.handleLogout(out);
@@ -101,6 +109,30 @@ public class ServerBackend {
 //                return;
 //            }
 
+            // Simple string-based API protocol
+            if (line.startsWith("GET_USERS")) {
+                String response = UserApiHandler.handleGetUsers();
+                out.write(response + "\n");
+                out.flush();
+                return;
+            } else if (line.startsWith("REGISTER:")) {
+                String json = line.substring("REGISTER:".length());
+                String response = AuthApiHandler.handleRegister(json);
+                out.write(response + "\n");
+                out.flush();
+                return;
+            } else if (line.startsWith("LOGIN:")) {
+                String json = line.substring("LOGIN:".length());
+                String response = AuthApiHandler.handleLogin(json);
+                out.write(response + "\n");
+                out.flush();
+                return;
+            } else if (line.startsWith("LOGOUT")) {
+                String response = AuthApiHandler.handleLogout();
+                out.write(response + "\n");
+                out.flush();
+                return;
+            }
 
             // Default case: Not found
             out.write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nNot found");
