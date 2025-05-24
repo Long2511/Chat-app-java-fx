@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+
+<!-- Chat view layout -->
+
+<AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.ChatView">
+
+    <!-- ===== Top Bar: user being chatted with ===== -->
+    <children>
+        <HBox fx:id="topBar" prefHeight="50.0" spacing="10.0" style="-fx-background-color: #1E1E2D;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <children>
+                <!-- Small rectangle (could be replaced by an avatar later) -->
+                <Rectangle fx:id="avatarRect" arcHeight="8.0" arcWidth="8.0" fill="#7b97b2" height="32.0" stroke="BLACK" width="32.0" />
+
+                <!-- Username label -->
+                <Label fx:id="chatTitle" alignment="CENTER_LEFT" prefHeight="42.0" prefWidth="76.0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Username" />
+            </children>
+        </HBox>
+
+        <!-- ===== Scrollable message area ===== -->
+        <ScrollPane fx:id="messageScroll" fitToWidth="true" layoutY="61.0" prefHeight="519.0" prefWidth="620.0" AnchorPane.bottomAnchor="60.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="61.0">
+            <content>
+                <!-- Messages will be added dynamically to this VBox by the controller -->
+                <VBox fx:id="messageContainer" prefWidth="600.0" spacing="10.0" />
+            </content>
+        </ScrollPane>
+
+        <!-- ===== Input bar (text field + send button) ===== -->
+        <HBox fx:id="inputBar" spacing="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0">
+            <children>
+                <!-- Text field for message input -->
+                <TextField fx:id="messageInput" prefHeight="45.0" prefWidth="567.0" promptText="Type your message..." HBox.hgrow="ALWAYS" />
+
+                <!-- Send button with an up‑arrow icon -->
+                <Button fx:id="sendButton" mnemonicParsing="false" onAction="#handleSendMessage" prefHeight="42.0" prefWidth="56.0" styleClass="send-button" stylesheets="@./css/chatView.css" text="Send" />
+            </children>
+        </HBox>
+    </children>
+</AnchorPane>
