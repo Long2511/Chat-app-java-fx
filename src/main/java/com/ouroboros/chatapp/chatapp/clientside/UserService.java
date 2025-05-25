@@ -4,6 +4,7 @@ import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.*;
+import java.util.List;
 
 public class UserService {
     private static final String SERVER_HOST = "localhost";
@@ -129,6 +130,36 @@ public class UserService {
         } catch (Exception e) {
             e.printStackTrace();
             return STATUS.FAILURE;
+        }
+    }
+
+    public static List<User> getAllUsers() {
+        try {
+            // Send request to get all users
+            BufferedWriter out = ClientConnection.getSharedWriter();
+            BufferedReader in = ClientConnection.getSharedReader();
+            out.write("start: GET_ALL_USERS\r\n");
+            out.write("end: GET_ALL_USERS\r\n");
+            out.flush();
+
+            // Read response
+            String line;
+            List<User> users = new java.util.ArrayList<>();
+            while (!(line = in.readLine()).equals("end: GET_ALL_USERS_RESPONSE")) {
+                if (line.startsWith("user: ")) {
+                    String userData = line.substring("user: ".length());
+                    String[] parts = userData.split(",");
+                    User user = new User();
+                    user.setId(Integer.parseInt(parts[0]));
+                    user.setUsername(parts[1]);
+                    user.setEmail(parts[2]);
+                    users.add(user);
+                }
+            }
+            return users;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }
