@@ -3,6 +3,7 @@ package com.ouroboros.chatapp.chatapp.datatype;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 
 public class Chat {
     private int id;
@@ -10,6 +11,15 @@ public class Chat {
     private String type;
     private String createdAt;
     private String updatedAt;
+    private List<User> users;
+
+    // Constructor with parameters
+    public Chat(int id, String name, List<User> users) {
+        this.id = id;
+        this.name = name;
+        this.users = users;
+    }
+    
 
     // Getters
     public int getId() {
@@ -30,6 +40,10 @@ public class Chat {
 
     public String getUpdatedAt() {
         return updatedAt;
+    }
+
+    public List<User> getUsers() {
+        return users;
     }
 
     // Setters
@@ -53,6 +67,11 @@ public class Chat {
         this.updatedAt = updatedAt;
     }
 
+    public void setUsers(List<User> users) {
+        this.users = users;
+    }
+
+    // Serialization method
     public void sendObject(BufferedWriter out) throws IOException {
         out.write("<start of object>\r\n");
         out.write("id: " + id + "\r\n");
@@ -63,6 +82,7 @@ public class Chat {
         out.write("<end of object>\r\n");
     }
 
+    // Deserialization method
     public static Chat receiveObject(BufferedReader in) throws IOException {
         String line;
         Chat chat = new Chat();
@@ -82,6 +102,7 @@ public class Chat {
         return chat;
     }
 
+    // Debugging method
     public void printChat() {
         System.out.println("Chat ID: " + id);
         System.out.println("Name: " + name);
