@@ -22,6 +22,10 @@ public class ChatHandler {
         return method.equals("start: CREATE_CHAT");
     }
 
+    public static boolean isGetChatsRequest(String method) {
+        return method.equals("start: GET_ALL_CHATS");
+    }
+
     public static boolean handleCreateChatRequest(BufferedReader in, BufferedWriter out) throws IOException {
         String chatName = null;
         List<Integer> userIds = new ArrayList<>();
@@ -75,6 +79,34 @@ public class ChatHandler {
         out.write("end: RESPONSE_CREATE_CHAT\r\n");
         out.flush();
 
+        return true;
+    }
+
+    public static boolean handleGetChatsRequest(BufferedReader in, BufferedWriter out) throws IOException {
+        int userId = -1;
+        String line;
+        while (!(line = in.readLine()).equals("end: GET_ALL_CHATS")) {
+            if (line.startsWith("userId: ")) {
+                userId = Integer.parseInt(line.substring("userId: ".length()));
+            }
+        }
+
+        List<Chat> resultChats = new ArrayList<>();
+
+        for (Chat chat : chats) {
+            if (chatUsersMap.containsKey(chat.getId()) && chatUsersMap.get(chat.getId()).contains(userId)) {
+                // If the user is part of the chat, we can send it
+                resultChats.add(chat);
+            }
+        }
+
+        out.write("start: RESPONSE_GET_ALL_CHATS\r\n");
+        out.write("length: " + resultChats.size() + "\r\n");
+        for (Chat chat : resultChats) {
+            chat.sendObject(out);
+        }
+        out.write("end: RESPONSE_GET_ALL_CHATS\r\n");
+        out.flush();
         return true;
     }
 }
