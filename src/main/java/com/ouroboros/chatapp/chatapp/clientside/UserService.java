@@ -32,7 +32,7 @@ public class UserService {
      * @param password user's password
      * @return STATUS indicating login success or failure
      */
-    public synchronized STATUS login(String email, String password) {
+    public synchronized User login(String email, String password) {
         try {
             // Send login request to server
             out.write("start: LOGIN\r\n");
@@ -41,22 +41,28 @@ public class UserService {
             out.write("end: LOGIN\r\n");
             out.flush();
 
+            String status = "FAILURE"; // Default status
+            User user = new User();
+            user.setEmail(email);
             // Read response
             String line;
             while (!(line = in.readLine()).equals("end: AUTH_RESPONSE")) {
                 if (line.startsWith("status: ")) {
-                    String status = line.substring("status: ".length());
-                    if (status.equals("SUCCESS")) {
-                        return STATUS.SUCCESS;
-                    } else {
-                        return STATUS.FAILURE;
-                    }
+                    status = line.substring("status: ".length());
+                } else if (line.startsWith("username: ")) {
+                    user.setUsername(line.substring("username: ".length()));
+                } else if (line.startsWith("userId: ")) {
+                    user.setId(Integer.parseInt(line.substring("userId: ".length())));
                 }
             }
-            return STATUS.FAILURE; // Default to failure if no status was received
+            if (status.equals("SUCCESS")) {
+                return user; // Return user object on successful login
+            } else {
+                return null; // Return null if login failed
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            return STATUS.FAILURE;
+            return null;
         }
     }
 
