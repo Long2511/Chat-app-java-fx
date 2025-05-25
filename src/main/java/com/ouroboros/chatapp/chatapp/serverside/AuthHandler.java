@@ -21,10 +21,10 @@ public class AuthHandler {
     public static STATUS RequestRegister(String username, String email, String password) {
         try (Connection conn = DatabaseUtils.getConnection()) {
             // First check if email already exists
-            try (PreparedStatement checkStmt = conn.prepareStatement("SELECT email FROM users WHERE email = ?")) {
+            try (PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE email = ?")) {
                 checkStmt.setString(1, email);
                 ResultSet rs = checkStmt.executeQuery();
-                if (rs.next()) {
+                if (rs.next()&& rs.getInt(1) > 0) {
                     System.out.println("Registration failed: Email " + email + " already exists");
                     return STATUS.FAILURE; // Email already exists
                 }

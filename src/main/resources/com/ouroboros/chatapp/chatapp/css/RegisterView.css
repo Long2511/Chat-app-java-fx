@@ -47,9 +47,12 @@
     -fx-padding: 10px 20px;
 }
 
-#registerButton {
-    -fx-background-color: #000000; /* Black for the Register button */
+.registerButton {
+    -fx-background-color: #1E1E2D;
     -fx-text-fill: white;
+}
+.registerButton:pressed {
+    -fx-background-color: #7b97b2;
 }
 
 #loginButton {

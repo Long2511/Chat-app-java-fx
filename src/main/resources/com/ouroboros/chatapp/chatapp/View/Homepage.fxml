@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/23.0.1" fx:controller="com.ouroboros.chatapp.chatapp.Homepage.HomepageController">
+<AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns:fx="http://javafx.com/fxml/1"  xmlns="http://javafx.com/javafx/23.0.1" fx:controller="com.ouroboros.chatapp.chatapp.Homepage.HomepageController">
     <children>
         <TabPane layoutX="10.0" layoutY="10.0" prefHeight="480.0" prefWidth="580.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <tabs>
@@ -35,7 +35,7 @@
                                 <HBox spacing="10.0">
                            <children>
                               <Region prefHeight="23.0" prefWidth="79.0" />
-                                        <Button fx:id="logoutButton" onAction="#handleLogout" prefHeight="30.0" prefWidth="90.0" text="Logout">
+                                        <Button fx:id="logoutButton" onAction="#handleLogout" prefHeight="30.0" prefWidth="90.0" stylesheets="@../css/Homepage.css" styleClass="button" text="Logout">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
@@ -44,7 +44,7 @@
                                  </HBox.margin>
                               </Button>
                               <Region prefHeight="30.0" prefWidth="211.0" />
-                                        <Button fx:id="createButton" alignment="CENTER" onAction="#handleCreate" prefHeight="30.0" prefWidth="90.0" text="Create" textAlignment="CENTER">
+                                        <Button fx:id="createButton" alignment="CENTER" onAction="#handleCreate" prefHeight="30.0" prefWidth="90.0" stylesheets="@../css/Homepage.css" styleClass="button" text="Create" textAlignment="CENTER">
                                  <font>
                                     <Font size="14.0" />
                                  </font>

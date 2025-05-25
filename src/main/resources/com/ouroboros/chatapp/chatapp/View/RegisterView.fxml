@@ -15,7 +15,7 @@
             <TextField fx:id="usernameField" promptText="Username" />
             <TextField fx:id="emailField" promptText="Email" />
             <PasswordField fx:id="passwordField" promptText="Password" />
-            <Button fx:id="registerButton" onAction="#onRegisterButtonClick" text="Register" />
+            <Button fx:id="registerButton" onAction="#onRegisterButtonClick" styleClass="registerButton" text="Register" />
             <HBox fx:id="loginPromptBox" alignment="CENTER" spacing="5.0">
                 <Label fx:id="loginPromptLabel" text="Already have an account?" />
                 <Button fx:id="loginButton" onAction="#onLoginButtonClick" text="Login here" />
