@@ -19,11 +19,36 @@ public class AuthHandler {
     }
 
     public static STATUS RequestRegister(String username, String email, String password) {
-        // Create new account in the database
-        // return STATUS.SUCCESS; // or STATUS.FAILURE based on the operation result
+        try (Connection conn = DatabaseUtils.getConnection()) {
+            // First check if email already exists
+            try (PreparedStatement checkStmt = conn.prepareStatement("SELECT email FROM users WHERE email = ?")) {
+                checkStmt.setString(1, email);
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next()) {
+                    System.out.println("Registration failed: Email " + email + " already exists");
+                    return STATUS.FAILURE; // Email already exists
+                }
+            }
 
-        return STATUS.SUCCESS; // Placeholder for successful registration
+            // Hash the password
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+            // Insert new user
+            try (PreparedStatement insertStmt = conn.prepareStatement(
+                    "INSERT INTO users (username, email, password) VALUES (?, ?, ?)")) {
+                insertStmt.setString(1, username);
+                insertStmt.setString(2, email);
+                insertStmt.setString(3, hashedPassword);
+                insertStmt.executeUpdate();
+                System.out.println("Registration successful for user: " + username);
+                return STATUS.SUCCESS;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error during registration: " + e.getMessage());
+            return STATUS.FAILURE;
+        }
     }
+
     public static User authenticateUser(String email, String password) throws SQLException {
         try (Connection conn = DatabaseUtils.getConnection()) {
             // Check if email exists and retrieve user details
@@ -39,20 +64,16 @@ public class AuthHandler {
                     user.setEmail(email);
                     user.setId(userId);
 
-
                     // Verify password
                     if (BCrypt.checkpw(password, hashedPassword)) {
                         return user; // Password matches, authentication successful
                     } else {
                         return null; // Password does not match
                     }
-
-
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-
         }
         // If no user found or password does not match
         System.out.println("Authentication failed for user: " + email);
