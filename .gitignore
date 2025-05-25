@@ -27,5 +27,7 @@ replay_pid*
 
 /target/
 /src/main/java/com/ouroboros/chatapp/chatapp/env
-/.idea/
+/.idea/*
 /.vscode/settings.json
+.idea/misc.xml
+*.iml
