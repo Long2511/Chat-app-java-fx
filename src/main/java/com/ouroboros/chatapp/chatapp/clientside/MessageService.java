@@ -37,7 +37,7 @@ public class MessageService {
      * @param chatId the chat ID to get messages for
      * @throws IOException if communication fails
      */
-    public void requestMessages(int chatId) throws IOException {
+    public synchronized void requestMessages(int chatId) throws IOException {
         out.write("start: GET_MESSAGES\r\n");
         out.write("chatId: " + chatId + "\r\n");
         out.write("end: GET_MESSAGES\r\n");
@@ -53,7 +53,7 @@ public class MessageService {
      * @param content the message content
      * @throws IOException if communication fails
      */
-    public void sendMessage(int chatId, int senderId, String content) throws IOException {
+    public synchronized void sendMessage(int chatId, int senderId, String content) throws IOException {
         out.write("start: SEND_MESSAGE\r\n");
         out.write("chatId: " + chatId + "\r\n");
         out.write("senderId: " + senderId + "\r\n");
@@ -101,7 +101,7 @@ public class MessageService {
      * Returns the list of messages
      * @return list of messages
      */
-    public List<Message> getMessages() {
+    public synchronized List<Message> getMessages() {
         return new ArrayList<>(messages);
     }
 }

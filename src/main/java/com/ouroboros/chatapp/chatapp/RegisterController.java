@@ -33,6 +33,7 @@ public class RegisterController {
     @FXML
     private Label statusLabel;
 
+    private UserService userService;
     @FXML
     private void onRegisterButtonClick() {
         String username = usernameField.getText();
@@ -45,7 +46,7 @@ public class RegisterController {
         }
 
         // Call the UserService to handle registration
-        if (UserService.register(username, email, password) == STATUS.SUCCESS) {
+        if (userService.register(username, email, password) == STATUS.SUCCESS) {
             statusLabel.setText("Registration successful!");
             navigateToLoginView();
         } else {

@@ -5,16 +5,21 @@ import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;;
+import java.sql.SQLException;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthHandler {
 
-    public static STATUS RequestLogin(String email, String password) {
+    public static STATUS RequestLogin(String email, String password) throws SQLException {
         // Compare with data from the database
         // return STATUS.SUCCESS; // or STATUS.FAILURE based on the comparison
-
-        return STATUS.SUCCESS; // Placeholder for successful login
+        if (AuthHandler.authenticateUser(email, password)) {
+            // If authentication is successful, return success status
+            return STATUS.SUCCESS;
+        } else {
+            // If authentication fails, return failure status
+            return STATUS.FAILURE;
+        }
     }
 
     public static STATUS RequestRegister(String username, String email, String password) {
@@ -23,7 +28,7 @@ public class AuthHandler {
 
         return STATUS.SUCCESS; // Placeholder for successful registration
     }
-    public boolean authenticateUser(String email, String password) throws SQLException {
+    public static boolean authenticateUser(String email, String password) throws SQLException {
         try (Connection conn = DatabaseUtils.getConnection()) {
             // Check if email exists and retrieve user details
             try (PreparedStatement stmt = conn.prepareStatement("SELECT id, username, password, email FROM users WHERE email = ?")) {
@@ -36,8 +41,7 @@ public class AuthHandler {
 
                     // Verify password
                     if (BCrypt.checkpw(password, hashedPassword)) {
-                        String storedPassword = Utils.createJwtToken(userId, username, email);
-                        return storedPassword.equals(password);
+                        return true; // Password matches, authentication successful
                     } else {
                         return false; // Password does not match
                     }
