@@ -1,5 +1,8 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+
 public class Utils {
     public static String readPacket(BufferedReader in) {
         StringBuilder packet = new StringBuilder();
