@@ -9,6 +9,16 @@ public class User {
     private String username;
     private String email;
 
+    // Constructor with parameters
+    public User(int id, String username, String email) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+    }
+
+    // Default constructor
+    public User() {}
+
     // Getters
     public int getId() {
         return id;
@@ -35,6 +45,7 @@ public class User {
         this.email = email;
     }
 
+    // Serialization method
     public void sendObject(BufferedWriter out) throws IOException {
         out.write("<start of object>\r\n");
         out.write("id: " + id + "\r\n");
@@ -43,6 +54,7 @@ public class User {
         out.write("<end of object>\r\n");
     }
 
+    // Deserialization method
     public static User receiveObject(BufferedReader in) throws IOException {
         String line;
         User user = new User();
@@ -58,6 +70,7 @@ public class User {
         return user;
     }
 
+    // Debugging method
     public void printUser() {
         System.out.println("User ID: " + id);
         System.out.println("Username: " + username);
