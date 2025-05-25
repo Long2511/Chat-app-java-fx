@@ -71,7 +71,7 @@ public class RegisterController implements Initializable {
             statusLabel.setText("Registration successful!");
             try {
                 // Redirect to login view after successful registration
-                SceneChanger.changeScene("View/LoginView.fxml");
+                SceneChanger.changeScene("/com/ouroboros/chatapp/chatapp/View/LoginView.fxml");
             } catch (IOException e) {
                 statusLabel.setText("Error changing scene: " + e.getMessage());
                 e.printStackTrace();
