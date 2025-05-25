@@ -1,8 +1,6 @@
 package com.ouroboros.chatapp.chatapp.clientside;
 
-import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.Message;
-import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.*;
 import java.net.Socket;
@@ -11,16 +9,16 @@ import java.util.List;
 
 public class ClientConnection {
 
+    private static final String SERVER_HOST = "localhost";
+    private static final int SERVER_PORT = 8080;
+    public static List<Message> messages = new ArrayList<>();
     private static Socket sharedSocket;
     private static BufferedReader sharedIn;
     private static BufferedWriter sharedOut;
-    private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 8080;
-
-    public static List<Message> messages = new ArrayList<>();
 
     /**
      * Gets or initializes a shared socket connection to the server
+     *
      * @return the shared socket instance
      * @throws IOException if connection fails
      */
@@ -36,6 +34,7 @@ public class ClientConnection {
 
     /**
      * Gets the shared BufferedReader for the connection
+     *
      * @return the shared BufferedReader
      * @throws IOException if connection is not established
      */
@@ -46,6 +45,7 @@ public class ClientConnection {
 
     /**
      * Gets the shared BufferedWriter for the connection
+     *
      * @return the shared BufferedWriter
      * @throws IOException if connection is not established
      */

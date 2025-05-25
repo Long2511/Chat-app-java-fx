@@ -1,8 +1,6 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
-import com.ouroboros.chatapp.chatapp.datatype.STATUS;
-import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -14,9 +12,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChatHandler {
-    public static AtomicInteger chatIdCounter = new AtomicInteger(1);
     public static final List<Chat> chats = Collections.synchronizedList(new ArrayList<>());
     public static final Map<Integer, List<Integer>> chatUsersMap = Collections.synchronizedMap(new java.util.HashMap<>());
+    public static AtomicInteger chatIdCounter = new AtomicInteger(1);
 
     public static boolean isCreateChatRequest(String method) {
         return method.equals("start: CREATE_CHAT");

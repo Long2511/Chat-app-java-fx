@@ -1,15 +1,16 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
-import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.logging.Logger;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ServerBackend {
     private static final int PORT = 8080;
@@ -50,8 +51,27 @@ public class ServerBackend {
             // Look for the start marker and determine the object type
             while (true) {
                 line = in.readLine();
-
-                if (line.equals("start: GET_MESSAGES")) {
+                if (line.equals("start: SEARCH_USERS_BY_NAME")) {
+                    System.out.println("[SERVER DEBUG] Received SEARCH_USERS_BY_NAME request");
+                    String query = "";
+                    while (!(line = in.readLine()).equals("end: SEARCH_USERS_BY_NAME")) {
+                        if (line.startsWith("query: ")) {
+                            query = line.substring("query: ".length());
+                        }
+                    }
+                    System.out.println("[SERVER DEBUG] SEARCH_USERS_BY_NAME query: " + query);
+                    PrintWriter pw = new PrintWriter(out, true);
+                    UserHandler.handleSearchUsersByName(query, pw);
+                } else if (line.equals("start: GET_ALL_USERS")) {
+                    System.out.println("[SERVER DEBUG] Received GET_ALL_USERS request");
+                    while (!(line = in.readLine()).equals("end: GET_ALL_USERS")) {
+                        // No parameters needed
+                    }
+                    PrintWriter pw = new PrintWriter(out, true);
+                    UserHandler.handleGetAllUsers(pw);
+                } else if (line.equals("start: CREATE_CHAT")) {
+                    ChatHandler.handleCreateChatRequest(in, out);
+                } else if (line.equals("start: GET_MESSAGES")) {
                     int chatId = -1;
                     while (!(line = in.readLine()).equals("end: GET_MESSAGES")) {
                         if (line.startsWith("chatId: ")) {
@@ -171,7 +191,8 @@ public class ServerBackend {
             try {
                 clientSocket.close();
                 System.out.println("Client disconnected");
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
         }
     }
 }

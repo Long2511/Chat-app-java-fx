@@ -13,38 +13,86 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class HomepageController {
 
+    private final javafx.collections.ObservableList<User> userSearchResults = javafx.collections.FXCollections.observableArrayList();
     @FXML
     private TextField searchField;
-
-    @FXML
-    private ListView<String> userList;
-
     @FXML
     private ListView<ChatPreview> chatListView;
-
     @FXML
     private Button createButton, logoutButton;
-
     @FXML
     private TabPane tabPane;
-
     @FXML
     private AnchorPane chatViewPane;
-
+    @FXML
+    private ListView<User> userSearchList;
     private User loggedInUser;
 
+    private final javafx.animation.PauseTransition searchDelay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(0.5));
+    private String lastSearchText = "";
+
     public void initialize() {
-        // Populate user list and chat previews
-        userList.getItems().addAll("user1", "user2", "user3", "user4");
         chatListView.setCellFactory(listView -> new ChatListCell());
         chatListView.setItems(FXCollections.observableArrayList(
                 new ChatPreview("Alice", "How are you?", "10:45 AM"),
                 new ChatPreview("Team Chat", "New file uploaded", "09:10 AM")
         ));
+        userSearchList.setItems(userSearchResults);
+        userSearchList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(User user, boolean empty) {
+                super.updateItem(user, empty);
+                if (empty || user == null) {
+                    setText(null);
+                } else {
+                    setText(user.getUsername() + (user.getStatus() != null ? " [" + user.getStatus() + "]" : ""));
+                }
+            }
+        });
+        loadAllUsersToSearchList();
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            lastSearchText = newValue;
+            searchDelay.stop();
+            searchDelay.setOnFinished(event -> filterUserSearchList(lastSearchText));
+            searchDelay.playFromStart();
+        });
+    }
+
+    private void loadAllUsersToSearchList() {
+        new Thread(() -> {
+            try {
+                java.util.List<User> allUsers = com.ouroboros.chatapp.chatapp.clientside.UserService.getAllUsers();
+                javafx.application.Platform.runLater(() -> {
+                    userSearchResults.clear();
+                    userSearchResults.addAll(allUsers);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void filterUserSearchList(String query) {
+        if (query == null || query.isEmpty()) {
+            loadAllUsersToSearchList();
+            return;
+        }
+        new Thread(() -> {
+            try {
+                List<User> filtered = com.ouroboros.chatapp.chatapp.clientside.UserService.searchUsers(query);
+                javafx.application.Platform.runLater(() -> {
+                    userSearchResults.clear();
+                    userSearchResults.addAll(filtered);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     public void setLoggedInUser(User user) {
@@ -54,9 +102,13 @@ public class HomepageController {
 
     @FXML
     private void handleCreate() {
-        var selectedUsers = userList.getSelectionModel().getSelectedItems();
+        var selectedUsers = userSearchList.getSelectionModel().getSelectedItems();
         if (!selectedUsers.isEmpty()) {
-            List<User> users = ChatService.searchUsers(selectedUsers);
+            List<String> usernames = new ArrayList<>();
+            for (User user : selectedUsers) {
+                usernames.add(user.getUsername());
+            }
+            List<User> users = ChatService.searchUsers(usernames);
             Chat newChat = ChatService.createChat(users, "New Chat");
             System.out.println("Chat created: " + newChat);
         } else {

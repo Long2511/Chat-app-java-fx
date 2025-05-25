@@ -34,6 +34,7 @@ public class MessageService {
 
     /**
      * Requests all messages for a specific chat
+     *
      * @param chatId the chat ID to get messages for
      * @throws IOException if communication fails
      */
@@ -48,9 +49,10 @@ public class MessageService {
 
     /**
      * Sends a new message to the server
-     * @param chatId the chat ID
+     *
+     * @param chatId   the chat ID
      * @param senderId the sender ID
-     * @param content the message content
+     * @param content  the message content
      * @throws IOException if communication fails
      */
     public synchronized void sendMessage(int chatId, int senderId, String content) throws IOException {
@@ -66,6 +68,7 @@ public class MessageService {
 
     /**
      * Receives messages from the server response
+     *
      * @throws IOException if communication fails
      */
     private void receiveMessages() throws IOException {
@@ -83,6 +86,7 @@ public class MessageService {
 
     /**
      * Receives a new message from the server response
+     *
      * @throws IOException if communication fails
      */
     private void receiveNewMessage() throws IOException {
@@ -99,6 +103,7 @@ public class MessageService {
 
     /**
      * Returns the list of messages
+     *
      * @return list of messages
      */
     public synchronized List<Message> getMessages() {

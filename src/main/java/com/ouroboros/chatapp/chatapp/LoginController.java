@@ -1,19 +1,14 @@
 package com.ouroboros.chatapp.chatapp;
 
-import com.ouroboros.chatapp.chatapp.Homepage.HomepageController;
 import com.ouroboros.chatapp.chatapp.clientside.UserService;
-import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Label;
-import javafx.application.Platform;
 
 import java.io.IOException;
 import java.net.URL;

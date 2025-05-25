@@ -1,14 +1,13 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
+import com.ouroboros.chatapp.chatapp.datatype.User;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import com.ouroboros.chatapp.chatapp.datatype.User;
-import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthHandler {
 
@@ -24,7 +23,7 @@ public class AuthHandler {
             try (PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE email = ?")) {
                 checkStmt.setString(1, email);
                 ResultSet rs = checkStmt.executeQuery();
-                if (rs.next()&& rs.getInt(1) > 0) {
+                if (rs.next() && rs.getInt(1) > 0) {
                     System.out.println("Registration failed: Email " + email + " already exists");
                     return STATUS.FAILURE; // Email already exists
                 }
