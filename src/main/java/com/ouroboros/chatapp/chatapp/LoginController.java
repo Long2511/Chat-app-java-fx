@@ -78,21 +78,6 @@ public class LoginController implements Initializable {
         }
     }
 
-//    public void navigateToHomePage() {
-//        try {
-//            Stage stage = (Stage) loginButton.getScene().getWindow();
-//            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
-//            Scene scene = new Scene(fxmlLoader.load());
-//
-//            // Pass the logged-in user to the HomepageController
-//            HomepageController controller = fxmlLoader.getController();
-//            controller.setLoggedInUser(loggedInUser);
-//
-//            stage.setScene(scene);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     @FXML
     protected void onRegisterButtonClick() throws IOException {
