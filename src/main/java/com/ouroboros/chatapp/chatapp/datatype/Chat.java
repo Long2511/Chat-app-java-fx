@@ -19,7 +19,7 @@ public class Chat {
         this.name = name;
         this.users = users;
     }
-    
+
 
     // Getters
     public int getId() {
