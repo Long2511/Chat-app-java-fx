@@ -68,9 +68,8 @@ public class LoginController implements Initializable {
         }
 
         // Call the UserService to handle login
-        if (userService.login(email, password) == STATUS.SUCCESS) {
-//        loggedInUser = UserService.loginAndGetUser(email, password);
-//        if (loggedInUser != null) {
+        loggedInUser = userService.login(email, password);
+        if (loggedInUser != null) {
             welcomeLabel.setText("Login successful!");
             navigateToHomePage();
         } else {

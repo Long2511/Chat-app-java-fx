@@ -98,14 +98,17 @@ public class ServerBackend {
 
                     System.out.println("Login attempt for: " + email);
 
-                    STATUS loginStatus = STATUS.FAILURE;
+                    User user = null;
                     if (email != null && password != null) {
-                        loginStatus = AuthHandler.RequestLogin(email, password);
+                        user = AuthHandler.RequestLogin(email, password);
                     }
-                    if (loginStatus.equals(STATUS.SUCCESS)) {
+                    if (user != null) {
                         System.out.println("Login successful for: " + email);
                         out.write("start: AUTH_RESPONSE\r\n");
                         out.write("status: SUCCESS\r\n");
+                        out.write("username: " + user.getUsername() + "\r\n");
+                        out.write("email: " + user.getEmail() + "\r\n");
+                        out.write("userId: " + user.getId() + "\r\n");
                         out.write("end: AUTH_RESPONSE\r\n");
                         out.flush();
                     } else {
@@ -140,6 +143,7 @@ public class ServerBackend {
                     if (registerStatus.equals(STATUS.SUCCESS)) {
                         out.write("start: REGISTER_RESPONSE\r\n");
                         out.write("status: SUCCESS\r\n");
+                        out.write("username: " + username + "\r\n");
                         out.write("end: REGISTER_RESPONSE\r\n");
                         out.flush();
                     } else {
