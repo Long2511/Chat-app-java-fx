@@ -79,4 +79,5 @@ public class AuthHandler {
         System.out.println("Authentication failed for user: " + email);
         return null;
     }
+
 }

@@ -30,42 +30,6 @@ public class ChatService {
         }
     }
 
-    public synchronized static void sendMessage(Message message) {
-        try {
-            out.write("start: SEND_MESSAGE\r\n");
-            out.write("chatId: " + message.getChatId() + "\r\n");
-            out.write("senderId: " + message.getSenderId() + "\r\n");
-            out.write("content: " + message.getContent() + "\r\n");
-            out.write("end: SEND_MESSAGE\r\n");
-            out.flush();
-        } catch (IOException e) {
-            System.err.println("Error sending message: " + e.getMessage());
-        }
-    }
-
-    public synchronized static List<Message> getMessages(int chatId) {
-        List<Message> messages = new ArrayList<>();
-        try {
-            out.write("start: GET_MESSAGES\r\n");
-            out.write("chatId: " + chatId + "\r\n");
-            out.write("end: GET_MESSAGES\r\n");
-            out.flush();
-
-            String line;
-            while (!(line = in.readLine()).equals("end: RESPONSE_MESSAGES")) {
-                if (line.startsWith("length: ")) {
-                    int length = Integer.parseInt(line.substring("length: ".length()));
-                    for (int i = 0; i < length; i++) {
-                        messages.add(Message.receiveObject(in));
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error retrieving messages: " + e.getMessage());
-        }
-        return messages;
-    }
-
     public synchronized static List<Chat> getAllChats(int userId) {
         List<Chat> chats = new ArrayList<>();
         try {
