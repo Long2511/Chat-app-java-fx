@@ -1,7 +1,9 @@
 package com.ouroboros.chatapp.chatapp;
 
+import com.ouroboros.chatapp.chatapp.Homepage.HomepageController;
 import com.ouroboros.chatapp.chatapp.clientside.UserService;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
+import com.ouroboros.chatapp.chatapp.datatype.User;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -12,6 +14,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Label;
 import javafx.application.Platform;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -32,6 +35,8 @@ public class LoginController implements Initializable {
 
     @FXML
     private Label welcomeLabel;
+
+    private User loggedInUser;
 
     private UserService userService;
 
@@ -64,6 +69,8 @@ public class LoginController implements Initializable {
 
         // Call the UserService to handle login
         if (userService.login(email, password) == STATUS.SUCCESS) {
+        loggedInUser = UserService.loginAndGetUser(email, password);
+        if (loggedInUser != null) {
             welcomeLabel.setText("Login successful!");
             navigateToHomePage();
         } else {
@@ -74,8 +81,13 @@ public class LoginController implements Initializable {
     private void navigateToHomePage() {
         try {
             Stage stage = (Stage) loginButton.getScene().getWindow();
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/HomeView.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
+
+            // Pass the logged-in user to the HomepageController
+            HomepageController controller = fxmlLoader.getController();
+            controller.setLoggedInUser(loggedInUser);
+
             stage.setScene(scene);
         } catch (IOException e) {
             e.printStackTrace();
