@@ -160,6 +160,8 @@ public class ServerBackend {
                     System.out.println("Logout request");
                 } else if (ChatHandler.isCreateChatRequest(line)) {
                     ChatHandler.handleCreateChatRequest(in, out);
+                } else if (ChatHandler.isGetChatsRequest(line)) {
+                    ChatHandler.handleGetChatsRequest(in, out);
                 }
             }
 
