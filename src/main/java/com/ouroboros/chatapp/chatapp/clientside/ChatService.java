@@ -3,6 +3,7 @@ package com.ouroboros.chatapp.chatapp.clientside;
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.User;
+import javafx.collections.ObservableList;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -130,4 +131,9 @@ public class ChatService {
         }
         return null;
     }
+
+    public static List<User> searchUsers(ObservableList<String> selectedUsers) {
+        return null;
+    }
+
 }

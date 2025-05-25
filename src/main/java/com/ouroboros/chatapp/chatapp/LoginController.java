@@ -69,8 +69,8 @@ public class LoginController implements Initializable {
 
         // Call the UserService to handle login
         if (userService.login(email, password) == STATUS.SUCCESS) {
-        loggedInUser = UserService.loginAndGetUser(email, password);
-        if (loggedInUser != null) {
+//        loggedInUser = UserService.loginAndGetUser(email, password);
+//        if (loggedInUser != null) {
             welcomeLabel.setText("Login successful!");
             navigateToHomePage();
         } else {
@@ -78,7 +78,7 @@ public class LoginController implements Initializable {
         }
     }
 
-    private void navigateToHomePage() {
+    public void navigateToHomePage() {
         try {
             Stage stage = (Stage) loginButton.getScene().getWindow();
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));

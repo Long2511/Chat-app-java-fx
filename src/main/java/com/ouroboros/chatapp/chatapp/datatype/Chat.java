@@ -3,6 +3,7 @@ package com.ouroboros.chatapp.chatapp.datatype;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 
 public class Chat {
     private int id;
@@ -10,6 +11,16 @@ public class Chat {
     private String type;
     private String createdAt;
     private String updatedAt;
+
+    public Chat() {}
+
+    public Chat(int chatId, String chatName, List<User> users) {
+        this.id = chatId;
+        this.name = chatName;
+        this.type = users.size() > 2 ? "GROUP" : "PRIVATE"; // Determine type based on number of users
+        this.createdAt = java.time.LocalDateTime.now().toString();
+        this.updatedAt = createdAt; // Initially set to created time
+    }
 
     // Getters
     public int getId() {
