@@ -1,5 +1,7 @@
 package com.ouroboros.chatapp.chatapp;
 
+import com.ouroboros.chatapp.chatapp.clientside.UserService;
+import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -40,18 +42,30 @@ public class LoginController {
             return;
         }
 
-        // Simulate login logic
-        if (email.equals("user@example.com") && password.equals("password")) {
+        // Call the UserService to handle login
+        if (UserService.login(email, password) == STATUS.SUCCESS) {
             Toast.show(stage, "Login successful!", 2000);
+            navigateToHomePage();
         } else {
             Toast.show(stage, "Invalid email or password.", 2000);
+        }
+    }
+
+    private void navigateToHomePage() {
+        try {
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/HomeView.fxml"));
+            Scene scene = new Scene(fxmlLoader.load());
+            stage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     @FXML
     private void onRegisterButtonClick() throws IOException {
         Stage stage = (Stage) registerButton.getScene().getWindow();
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("View/RegisterView.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/RegisterView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         stage.setScene(scene);
     }

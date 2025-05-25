@@ -1,5 +1,8 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
+import com.ouroboros.chatapp.chatapp.datatype.Chat;
+import com.ouroboros.chatapp.chatapp.datatype.Message;
+import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.*;
 import java.net.*;
@@ -30,6 +33,7 @@ public class ServerBackend {
 
         while (true) {
             Socket clientSocket = serverSocket.accept();
+            System.out.println("Client connected: " + clientSocket.getInetAddress());
             new Thread(() -> handleClient(clientSocket)).start();
         }
     }
@@ -38,79 +42,57 @@ public class ServerBackend {
         Logger logger = Logger.getLogger(ServerBackend.class.getName());
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
-            String line = in.readLine();
-            if (line == null) return;
-            StringTokenizer tokenizer = new StringTokenizer(line);
-            String method = tokenizer.nextToken();
-            String path = tokenizer.nextToken();
 
-            // Handle CORS preflight requests
-            if (method.equals("OPTIONS")) {
-                out.write("HTTP/1.1 200 OK\r\n");
-                out.write("Access-Control-Allow-Origin: http://localhost:3000\r\n");
-                out.write("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n");
-                out.write("Access-Control-Allow-Headers: Content-Type, Authorization\r\n");
-                out.write("\r\n");
-                out.flush();
-                return;
+            String line;
+
+            // Look for the start marker and determine the object type
+            while (true) {
+                line = in.readLine();
+
+                if (line.equals("start: GET_MESSAGES")) {
+                    int chatId = -1;
+                    while (!(line = in.readLine()).equals("end: GET_MESSAGES")) {
+                        if (line.startsWith("chatId: ")) {
+                            chatId = Integer.parseInt(line.substring("chatId: ".length()));
+                        }
+                    }
+                    System.out.println("Chat ID: " + chatId);
+                    if (chatId != -1) {
+                        MessageHandler.handleRequestMessages(chatId, out);
+                    }
+                } else if (line.equals("start: SEND_MESSAGE")) {
+                    int chatId = -1;
+                    int senderId = -1;
+                    String content = null;
+
+                    while (!(line = in.readLine()).equals("end: SEND_MESSAGE")) {
+                        if (line.startsWith("chatId: ")) {
+                            chatId = Integer.parseInt(line.substring("chatId: ".length()));
+                        } else if (line.startsWith("senderId: ")) {
+                            senderId = Integer.parseInt(line.substring("senderId: ".length()));
+                        } else if (line.startsWith("content: ")) {
+                            content = line.substring("content: ".length());
+                        }
+                    }
+
+                    System.out.println("Chat ID: " + chatId);
+                    System.out.println("Sender ID: " + senderId);
+                    System.out.println("Content: " + content);
+
+                    if (chatId != -1 && senderId != -1 && content != null) {
+                        MessageHandler.handleSendMessage(chatId, senderId, content, out);
+                    }
+                }
+
             }
-
-            // Remove /api prefix for easier matching
-            if (path.startsWith("/api/")) path = path.substring(4);
-
-
-            // User API: GET /users
-            if (method.equals("GET") && path.equals("/users")) {
-//                UserApiHandler.handleGetUsers(out);
-                return;
-            }
-            // Auth API: POST /auth/register
-            if (method.equals("POST") && path.equals("/auth/register")) {
-//                AuthApiHandler.handleRegister(in, out);
-                return;
-            }
-            // Auth API: POST /auth/login
-            if (method.equals("POST") && path.equals("/auth/login")) {
-//                AuthApiHandler.handleLogin(in, out);
-                return;
-            }
-            // Auth API: POST /auth/logout
-            if (method.equals("POST") && path.equals("/auth/logout")) {
-//                AuthApiHandler.handleLogout(out);
-                return;
-            }
-
-            // Chat API
-            if (method.equals("GET") && path.equals("/chats")) {
-//                ChatAPIHandler.handleGetChats(out);
-                return;
-            } else if (method.equals("POST") && path.startsWith("/chats/private/")) {
-//                ChatAPIHandler.handlePostPrivateChat(path, out);
-                return;
-            } else if (method.equals("POST") && path.startsWith("/chats/group")) {
-//                ChatAPIHandler.handlePostGroupChat(path, in, out);
-                return;
-            }
-
-            // Messages API: GET /messages/chat/{chatId}
-//            if (MessagesApiHandler.handleGetMessages(method, path, in, out)) {
-//                return;
-//            }
-            // Messages API: POST /messages/chat/{chatId}
-//            if (MessagesApiHandler.handlePostMessage(method, path, in, out)) {
-//                return;
-//            }
-
-
-            // Default case: Not found
-            out.write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nNot found");
-            out.flush();
-            return;
 
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Cannot connect to Database", e);
+            logger.log(Level.SEVERE, "Error handling client connection", e);
         } finally {
-            try { clientSocket.close(); } catch (IOException ignored) {}
+            try {
+                clientSocket.close();
+                System.out.println("Client disconnected");
+            } catch (IOException ignored) {}
         }
     }
 }
