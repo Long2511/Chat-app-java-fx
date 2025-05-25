@@ -6,16 +6,20 @@ import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Label;
+import javafx.application.Platform;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
-public class LoginController {
+public class LoginController implements Initializable {
 
     @FXML
     private TextField emailField;
@@ -34,6 +38,19 @@ public class LoginController {
 
     private User loggedInUser;
 
+    private UserService userService;
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        // Initialize UserService when the controller is created
+        try {
+            userService = new UserService();
+        } catch (IOException e) {
+            Platform.runLater(() -> welcomeLabel.setText("Error connecting to server"));
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     private void onLoginButtonClick() {
         String email = emailField.getText();
@@ -44,9 +61,16 @@ public class LoginController {
             return;
         }
 
+        // Check if userService was initialized properly
+        if (userService == null) {
+            welcomeLabel.setText("Cannot connect to server. Please try again later.");
+            return;
+        }
+
         // Call the UserService to handle login
-        loggedInUser = UserService.loginAndGetUser(email, password);
-        if (loggedInUser != null) {
+        if (userService.login(email, password) == STATUS.SUCCESS) {
+//        loggedInUser = UserService.loginAndGetUser(email, password);
+//        if (loggedInUser != null) {
             welcomeLabel.setText("Login successful!");
             navigateToHomePage();
         } else {
@@ -54,7 +78,7 @@ public class LoginController {
         }
     }
 
-    private void navigateToHomePage() {
+    public void navigateToHomePage() {
         try {
             Stage stage = (Stage) loginButton.getScene().getWindow();
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
