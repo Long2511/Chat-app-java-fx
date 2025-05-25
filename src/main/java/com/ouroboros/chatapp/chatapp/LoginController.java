@@ -10,6 +10,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Label;
 import java.io.IOException;
 
+import com.ouroboros.chatapp.chatapp.clientside.Toast;
+
 public class LoginController {
 
     @FXML
@@ -31,17 +33,18 @@ public class LoginController {
     private void onLoginButtonClick() {
         String email = emailField.getText();
         String password = passwordField.getText();
+        Stage stage = (Stage) loginButton.getScene().getWindow();
 
         if (email.isEmpty() || password.isEmpty()) {
-            welcomeLabel.setText("Please fill in all fields.");
+            Toast.show(stage, "Please fill in all fields.", 2000);
             return;
         }
 
         // Simulate login logic
         if (email.equals("user@example.com") && password.equals("password")) {
-            welcomeLabel.setText("Login successful!");
+            Toast.show(stage, "Login successful!", 2000);
         } else {
-            welcomeLabel.setText("Invalid email or password.");
+            Toast.show(stage, "Invalid email or password.", 2000);
         }
     }
 
