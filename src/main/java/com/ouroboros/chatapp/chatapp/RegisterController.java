@@ -1,5 +1,7 @@
 package com.ouroboros.chatapp.chatapp;
 
+import com.ouroboros.chatapp.chatapp.clientside.UserService;
+import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,9 +25,6 @@ public class RegisterController {
     private PasswordField passwordField;
 
     @FXML
-    private PasswordField confirmPasswordField;
-
-    @FXML
     private Button registerButton;
 
     @FXML
@@ -39,21 +38,19 @@ public class RegisterController {
         String username = usernameField.getText();
         String email = emailField.getText();
         String password = passwordField.getText();
-        String confirmPassword = confirmPasswordField.getText();
 
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
             statusLabel.setText("Please fill in all fields.");
             return;
         }
 
-        if (!password.equals(confirmPassword)) {
-            statusLabel.setText("Passwords do not match.");
-            return;
+        // Call the UserService to handle registration
+        if (UserService.register(username, email, password) == STATUS.SUCCESS) {
+            statusLabel.setText("Registration successful!");
+            navigateToLoginView();
+        } else {
+            statusLabel.setText("Registration failed.");
         }
-
-        // Simulate successful registration
-        statusLabel.setText("Registration successful!");
-        navigateToLoginView();
     }
 
     @FXML
@@ -64,7 +61,7 @@ public class RegisterController {
     private void navigateToLoginView() {
         try {
             Stage stage = (Stage) loginButton.getScene().getWindow();
-            FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("View/LoginView.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/LoginView.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
             stage.setScene(scene);
         } catch (IOException e) {

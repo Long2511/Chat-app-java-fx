@@ -11,7 +11,7 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(
-            HelloApplication.class.getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml")
+            HelloApplication.class.getResource("/com/ouroboros/chatapp/chatapp/View/LoginView.fxml")
         );
         Scene scene = new Scene(fxmlLoader.load(), 640, 640); // chỉnh size phù hợp
         stage.setTitle("Chat Application");
