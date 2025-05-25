@@ -30,7 +30,7 @@ public class ChatService {
         }
     }
 
-    public static void sendMessage(Message message) {
+    public synchronized static void sendMessage(Message message) {
         try {
             out.write("start: SEND_MESSAGE\r\n");
             out.write("chatId: " + message.getChatId() + "\r\n");
@@ -43,7 +43,7 @@ public class ChatService {
         }
     }
 
-    public static List<Message> getMessages(int chatId) {
+    public synchronized static List<Message> getMessages(int chatId) {
         List<Message> messages = new ArrayList<>();
         try {
             out.write("start: GET_MESSAGES\r\n");
@@ -66,7 +66,7 @@ public class ChatService {
         return messages;
     }
 
-    public static List<Chat> getAllChats(int userId) {
+    public synchronized static List<Chat> getAllChats(int userId) {
         List<Chat> chats = new ArrayList<>();
         try {
             out.write("start: GET_ALL_CHATS\r\n");
@@ -89,7 +89,7 @@ public class ChatService {
         return chats;
     }
 
-    public static Chat createChat(List<User> users, String chatName) {
+    public synchronized static Chat createChat(List<User> users, String chatName) {
         try {
             out.write("start: CREATE_CHAT\r\n");
             out.write("chatName: " + chatName + "\r\n");
@@ -113,7 +113,7 @@ public class ChatService {
         return null;
     }
 
-    public static Chat getChatDetails(int chatId) {
+    public synchronized static Chat getChatDetails(int chatId) {
         try {
             out.write("start: GET_CHAT_DETAILS\r\n");
             out.write("chatId: " + chatId + "\r\n");
@@ -132,7 +132,7 @@ public class ChatService {
         return null;
     }
 
-    public static List<User> searchUsers(ObservableList<String> selectedUsers) {
+    public synchronized static List<User> searchUsers(ObservableList<String> selectedUsers) {
         return null;
     }
 
