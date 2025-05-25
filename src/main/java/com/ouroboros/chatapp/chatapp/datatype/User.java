@@ -63,4 +63,5 @@ public class User {
         System.out.println("Username: " + username);
         System.out.println("Email: " + email);
     }
+
 }
