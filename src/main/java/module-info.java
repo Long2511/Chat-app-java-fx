@@ -8,4 +8,6 @@ module com.ouroboros.chatapp.chatapp {
 
     opens com.ouroboros.chatapp.chatapp to javafx.fxml;
     exports com.ouroboros.chatapp.chatapp;
+     opens com.ouroboros.chatapp.chatapp.Homepage to javafx.fxml;
+    exports com.ouroboros.chatapp.chatapp.Homepage to javafx.fxml;
 }
