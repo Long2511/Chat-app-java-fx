@@ -20,7 +20,7 @@ public class ServerBackend {
 
         // Initialize database connection
         try {
-//            DatabaseUtils.getConnection();
+            DatabaseUtils.getConnection();
             System.out.println("Successfully connected to database");
         } catch (Exception e) {
             System.err.println("Failed to connect to database: " + e.getMessage());

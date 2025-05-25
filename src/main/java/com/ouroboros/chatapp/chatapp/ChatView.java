@@ -11,6 +11,7 @@ import java.io.IOException;
 
 public class ChatView extends Application {
 
+    // For demo purposes
     @Override
     public void start(Stage primaryStage) throws Exception {
         try {
