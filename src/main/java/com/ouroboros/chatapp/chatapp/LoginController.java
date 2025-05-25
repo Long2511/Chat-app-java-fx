@@ -46,10 +46,7 @@ public class LoginController {
     }
 
     @FXML
-    private void onRegisterButtonClick() throws IOException {
-        Stage stage = (Stage) registerButton.getScene().getWindow();
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("View/RegisterView.fxml"));
-        Scene scene = new Scene(fxmlLoader.load());
-        stage.setScene(scene);
+    protected void onRegisterButtonClick() throws IOException {
+        SceneChanger.changeScene("View/RegisterView.fxml");
     }
 }
