@@ -4,6 +4,7 @@ module com.ouroboros.chatapp.chatapp {
     requires java.logging;
     requires java.sql;
     requires org.postgresql.jdbc;
+    requires jbcrypt;
 
 
     opens com.ouroboros.chatapp.chatapp to javafx.fxml;

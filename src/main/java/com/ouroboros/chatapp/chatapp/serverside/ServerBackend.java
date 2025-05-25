@@ -103,11 +103,13 @@ public class ServerBackend {
                         loginStatus = AuthHandler.RequestLogin(email, password);
                     }
                     if (loginStatus.equals(STATUS.SUCCESS)) {
+                        System.out.println("Login successful for: " + email);
                         out.write("start: AUTH_RESPONSE\r\n");
                         out.write("status: SUCCESS\r\n");
                         out.write("end: AUTH_RESPONSE\r\n");
                         out.flush();
                     } else {
+                        System.out.println("Login failed for: " + email);
                         out.write("start: AUTH_RESPONSE\r\n");
                         out.write("status: FAILURE\r\n");
                         out.write("end: AUTH_RESPONSE\r\n");
