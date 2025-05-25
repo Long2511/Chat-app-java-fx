@@ -69,25 +69,21 @@ public class RegisterController implements Initializable {
         // Call the UserService to handle registration
         if (userService.register(username, email, password) == STATUS.SUCCESS) {
             statusLabel.setText("Registration successful!");
-            navigateToLoginView();
+            try {
+                // Redirect to login view after successful registration
+                SceneChanger.changeScene("View/LoginView.fxml");
+            } catch (IOException e) {
+                statusLabel.setText("Error changing scene: " + e.getMessage());
+                e.printStackTrace();
+            }
         } else {
             statusLabel.setText("Registration failed. Email might already exist.");
         }
     }
 
     @FXML
-    private void onLoginButtonClick() {
-        navigateToLoginView();
+    private void onLoginButtonClick() throws IOException {
+        SceneChanger.changeScene("View/LoginView.fxml");
     }
 
-    private void navigateToLoginView() {
-        try {
-            Stage stage = (Stage) loginButton.getScene().getWindow();
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/LoginView.fxml"));
-            Scene scene = new Scene(fxmlLoader.load());
-            stage.setScene(scene);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

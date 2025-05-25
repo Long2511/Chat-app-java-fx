@@ -52,7 +52,7 @@ public class LoginController implements Initializable {
     }
 
     @FXML
-    private void onLoginButtonClick() {
+    private void onLoginButtonClick() throws IOException {
         String email = emailField.getText();
         String password = passwordField.getText();
 
@@ -71,27 +71,28 @@ public class LoginController implements Initializable {
         loggedInUser = userService.login(email, password);
         if (loggedInUser != null) {
             welcomeLabel.setText("Login successful!");
-            navigateToHomePage();
+            // Navigate to the homepage
+            SceneChanger.changeScene("View/Homepage.fxml");
         } else {
             welcomeLabel.setText("Invalid email or password.");
         }
     }
 
-    public void navigateToHomePage() {
-        try {
-            Stage stage = (Stage) loginButton.getScene().getWindow();
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
-            Scene scene = new Scene(fxmlLoader.load());
-
-            // Pass the logged-in user to the HomepageController
-            HomepageController controller = fxmlLoader.getController();
-            controller.setLoggedInUser(loggedInUser);
-
-            stage.setScene(scene);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void navigateToHomePage() {
+//        try {
+//            Stage stage = (Stage) loginButton.getScene().getWindow();
+//            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
+//            Scene scene = new Scene(fxmlLoader.load());
+//
+//            // Pass the logged-in user to the HomepageController
+//            HomepageController controller = fxmlLoader.getController();
+//            controller.setLoggedInUser(loggedInUser);
+//
+//            stage.setScene(scene);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @FXML
     protected void onRegisterButtonClick() throws IOException {
