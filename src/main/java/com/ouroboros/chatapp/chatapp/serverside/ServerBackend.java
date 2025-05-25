@@ -2,6 +2,7 @@ package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.Message;
+import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.*;
@@ -12,7 +13,7 @@ import java.util.logging.Level;
 
 public class ServerBackend {
     private static final int PORT = 8080;
-    
+
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(PORT);
@@ -83,8 +84,75 @@ public class ServerBackend {
                     if (chatId != -1 && senderId != -1 && content != null) {
                         MessageHandler.handleSendMessage(chatId, senderId, content, out);
                     }
-                }
+                } else if (line.equals("start: LOGIN")) {
+                    String email = null;
+                    String password = null;
 
+                    while (!(line = in.readLine()).equals("end: LOGIN")) {
+                        if (line.startsWith("email: ")) {
+                            email = line.substring("email: ".length());
+                        } else if (line.startsWith("password: ")) {
+                            password = line.substring("password: ".length());
+                        }
+                    }
+
+                    System.out.println("Login attempt for: " + email);
+
+                    STATUS loginStatus = STATUS.FAILURE;
+                    if (email != null && password != null) {
+                        loginStatus = AuthHandler.RequestLogin(email, password);
+                    }
+                    if (loginStatus.equals(STATUS.SUCCESS)) {
+                        out.write("start: AUTH_RESPONSE\r\n");
+                        out.write("status: SUCCESS\r\n");
+                        out.write("end: AUTH_RESPONSE\r\n");
+                        out.flush();
+                    } else {
+                        out.write("start: AUTH_RESPONSE\r\n");
+                        out.write("status: FAILURE\r\n");
+                        out.write("end: AUTH_RESPONSE\r\n");
+                        out.flush();
+                    }
+                } else if (line.equals("start: REGISTER")) {
+                    String username = null;
+                    String email = null;
+                    String password = null;
+
+                    while (!(line = in.readLine()).equals("end: REGISTER")) {
+                        if (line.startsWith("username: ")) {
+                            username = line.substring("username: ".length());
+                        } else if (line.startsWith("email: ")) {
+                            email = line.substring("email: ".length());
+                        } else if (line.startsWith("password: ")) {
+                            password = line.substring("password: ".length());
+                        }
+                    }
+
+                    System.out.println("Registration attempt for: " + email);
+
+                    STATUS registerStatus = STATUS.FAILURE;
+
+                    if (username != null && email != null && password != null) {
+                        registerStatus = AuthHandler.RequestRegister(username, email, password);
+                    }
+                    if (registerStatus.equals(STATUS.SUCCESS)) {
+                        out.write("start: REGISTER_RESPONSE\r\n");
+                        out.write("status: SUCCESS\r\n");
+                        out.write("end: REGISTER_RESPONSE\r\n");
+                        out.flush();
+                    } else {
+                        out.write("start: REGISTER_RESPONSE\r\n");
+                        out.write("status: FAILURE\r\n");
+                        out.write("end: REGISTER_RESPONSE\r\n");
+                        out.flush();
+                    }
+                } else if (line.equals("start: LOGOUT")) {
+                    while (!(line = in.readLine()).equals("end: LOGOUT")) {
+                        // No parameters needed for logout
+                    }
+
+                    System.out.println("Logout request");
+                }
             }
 
         } catch (Exception e) {
