@@ -1,3 +1,5 @@
+package com.ouroboros.chatapp.chatapp.clientside;
+
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.User;
