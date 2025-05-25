@@ -31,6 +31,9 @@ public class HomepageController {
     private AnchorPane chatViewPane;
     @FXML
     private ListView<User> userSearchList;
+
+    @FXML
+    private TextField chatName;
     private User loggedInUser;
 
     private final javafx.animation.PauseTransition searchDelay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(0.5));
@@ -43,6 +46,7 @@ public class HomepageController {
                 new ChatPreview("Team Chat", "New file uploaded", "09:10 AM")
         ));
         userSearchList.setItems(userSearchResults);
+        userSearchList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         userSearchList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
             @Override
             protected void updateItem(User user, boolean empty) {
@@ -61,6 +65,15 @@ public class HomepageController {
             searchDelay.setOnFinished(event -> filterUserSearchList(lastSearchText));
             searchDelay.playFromStart();
         });
+        // Hide chatName if only one user is selected, show if more than one
+        userSearchList.getSelectionModel().getSelectedItems().addListener((javafx.collections.ListChangeListener<User>) c -> {
+            if (userSearchList.getSelectionModel().getSelectedItems().size() > 1) {
+                chatName.setVisible(true);
+            } else {
+                chatName.setVisible(false);
+            }
+        });
+        chatName.setVisible(false); // Hide by default
     }
 
     private void loadAllUsersToSearchList() {
@@ -104,13 +117,21 @@ public class HomepageController {
     private void handleCreate() {
         var selectedUsers = userSearchList.getSelectionModel().getSelectedItems();
         if (!selectedUsers.isEmpty()) {
-            List<String> usernames = new ArrayList<>();
+            List<Integer> userIds = new ArrayList<>();
             for (User user : selectedUsers) {
-                usernames.add(user.getUsername());
+                userIds.add((int) user.getId());
             }
-            List<User> users = ChatService.searchUsers(usernames);
-            Chat newChat = ChatService.createChat(users, "New Chat");
-            System.out.println("Chat created: " + newChat);
+            String chatName;
+            if (selectedUsers.size() > 1) {
+                chatName = searchField.getText();
+                if (chatName == null || chatName.trim().isEmpty()) {
+                    chatName = "Group Chat";
+                }
+            } else {
+                chatName = selectedUsers.get(0).getUsername();
+            }
+            // Send chat creation request to server
+            com.ouroboros.chatapp.chatapp.clientside.ChatService.createChatGroup(userIds, chatName);
         } else {
             System.out.println("No users selected.");
         }

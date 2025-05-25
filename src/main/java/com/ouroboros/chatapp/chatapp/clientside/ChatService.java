@@ -133,4 +133,42 @@ public class ChatService {
         }
         return null;
     }
+
+    public synchronized static void createChatGroup(List<Integer> userIds) {
+        try {
+            out.write("start: CREATE_CHAT\r\n");
+            out.write("chatName: Group Chat\r\n"); // You may want to prompt for a name
+            out.write("users: " + userIds.size() + "\r\n");
+            for (Integer userId : userIds) {
+                out.write("userId: " + userId + "\r\n");
+            }
+            out.write("end: CREATE_CHAT\r\n");
+            out.flush();
+            // Optionally handle the response here
+            String line;
+            while (!(line = in.readLine()).equals("end: RESPONSE_CREATE_CHAT")) {
+                // You can parse status/message if needed
+            }
+        } catch (IOException e) {
+            System.err.println("Error creating chat group: " + e.getMessage());
+        }
+    }
+
+    public synchronized static void createChatGroup(List<Integer> userIds, String chatName) {
+        try {
+            out.write("start: CREATE_CHAT\r\n");
+            out.write("chatName: " + chatName + "\r\n");
+            out.write("users: " + userIds.size() + "\r\n");
+            for (Integer userId : userIds) {
+                out.write("userId: " + userId + "\r\n");
+            }
+            out.write("end: CREATE_CHAT\r\n");
+            out.flush();
+            while (!(in.readLine()).equals("end: RESPONSE_CREATE_CHAT")) {
+                // Optionally handle response
+            }
+        } catch (IOException e) {
+            System.err.println("Error creating chat group: " + e.getMessage());
+        }
+    }
 }

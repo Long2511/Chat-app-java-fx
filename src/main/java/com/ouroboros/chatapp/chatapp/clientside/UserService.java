@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserService {
-    private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 8080;
 
     private final BufferedReader in;
     private final BufferedWriter out;
