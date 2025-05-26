@@ -1,6 +1,7 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
+import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -115,6 +116,14 @@ public class ChatHandler {
     System.out.println("DEBUG: Sending RESPONSE_GET_ALL_CHATS with " + resultChats.size() + " chats");
     for (Chat chat : resultChats) {
         chat.sendObject(out);
+
+        //participants
+        List<User> participants = chat.getParticipants() != null ? chat.getParticipants() : new ArrayList<>();
+        out.write("participants: " + participants.size() + "\r\n");
+        for (User user : participants) {
+            user.sendObject(out);
+        }
+
         System.out.println("DEBUG: Sent chat: " + chat.getId() + " - " + chat.getName());
     }
     out.write("end: RESPONSE_GET_ALL_CHATS\r\n");
