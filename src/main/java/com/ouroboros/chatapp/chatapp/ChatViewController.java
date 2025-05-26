@@ -47,25 +47,25 @@ import javafx.geometry.Insets;
 public class ChatViewController {
     @FXML
     private HBox topBar;
-    
+
     @FXML
     private Rectangle avatarRect;
-    
+
     @FXML
     private Label chatTitle;
-    
+
     @FXML
     private ScrollPane messageScroll;
-    
+
     @FXML
     private VBox messageContainer;
-    
+
     @FXML
     private HBox inputBar;
-    
+
     @FXML
     private TextField messageInput;
-    
+
     @FXML
     private Button sendButton;
 
@@ -96,7 +96,7 @@ public class ChatViewController {
         // Initialize any necessary setup
         messageScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         messageScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        
+
         // Set up message input handling
         messageInput.setOnAction(event -> handleSendMessage());
         sendButton.setOnAction(event -> handleSendMessage());
@@ -363,8 +363,8 @@ public class ChatViewController {
                 // Use sendFile for file messages, not sendMessage
                 messageService.sendFile(msg, selectedFile);
 
-                // REMOVE the following line to avoid recursive update:
-                // renderMessage(msg);
+                // 3. Add the message to the UI immediately
+                renderMessage(msg);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -386,7 +386,7 @@ public class ChatViewController {
         messageArea.setEditable(false);
         messageArea.setPrefRowCount(1);
         messageArea.setMaxWidth(400);
-        
+
         // Add CSS classes
         messageArea.getStyleClass().add("message-area");
         messageArea.getStyleClass().add(isFromCurrentUser ? "current-user-message" : "other-user-message");
@@ -395,10 +395,10 @@ public class ChatViewController {
         messageBox.getStyleClass().add("message-box");
         messageBox.setAlignment(isFromCurrentUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
         messageBox.setMaxWidth(messageScroll.getWidth());
-        
+
         messageContainer.getChildren().add(messageBox);
         messageContainer.getStyleClass().add("message-container");
-        
+
         // Scroll to bottom
         messageScroll.setVvalue(1.0);
     }
@@ -516,24 +516,51 @@ public class ChatViewController {
     }
 
     private void renderMessage(Message msg) {
-        Label label;
         if (msg.isFile()) {
-            // Use fileUrl for file messages
-            String filePath = msg.getFileUrl() != null && !msg.getFileUrl().isEmpty() ? msg.getFileUrl() : msg.getContent();
-            Hyperlink fileLink = new Hyperlink("📄 " + msg.getContent());
+            String filePath = msg.getFileUrl() != null && !msg.getFileUrl().isEmpty()
+                    ? msg.getFileUrl()
+                    : msg.getContent();
+
+            String fileName = msg.getContent() != null && !msg.getContent().isEmpty()
+                    ? msg.getContent()
+                    : new File(filePath).getName();
+
+            Hyperlink fileLink = new Hyperlink("📎 " + fileName);
+            fileLink.setStyle("-fx-font-size: 14px; -fx-text-fill: #2a73ff; -fx-underline: false;");
             fileLink.setOnAction(e -> {
                 try {
                     File file = new File(filePath);
+                    if (!file.exists()) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("File not found");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Cannot open file: " + filePath);
+                        alert.showAndWait();
+                        return;
+                    }
                     Desktop.getDesktop().open(file);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             });
-            messageContainer.getChildren().add(fileLink);
+
+            VBox fileMessageBox = new VBox(fileLink);
+            fileMessageBox.setSpacing(4);
+            fileMessageBox.setStyle("-fx-background-color: #dbeafe; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+
+            HBox container = new HBox(fileMessageBox);
+            container.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+            container.setPadding(new Insets(2, 10, 2, 10));
+            messageContainer.getChildren().add(container);
         } else {
-            label = new Label(msg.getContent());
-            messageContainer.getChildren().add(label);
+            Label label = new Label(msg.getContent());
+            label.setWrapText(true);
+            label.setStyle("-fx-font-size: 14px; -fx-background-color: #e1ffc7; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+
+            HBox textBox = new HBox(label);
+            textBox.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+            textBox.setPadding(new Insets(2, 10, 2, 10));
+            messageContainer.getChildren().add(textBox);
         }
     }
-
 }

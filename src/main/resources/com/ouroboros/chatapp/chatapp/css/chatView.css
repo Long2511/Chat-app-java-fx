@@ -47,3 +47,15 @@
     -fx-padding: 5;
     -fx-spacing: 5;
 }
+
+.file-link {
+    -fx-text-fill: #0078d7;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.file-link:hover {
+    -fx-text-fill: #005a9e;
+    -fx-underline: true;
+}
