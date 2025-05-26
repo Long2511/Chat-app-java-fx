@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -20,10 +21,7 @@ public class HelloApplication extends Application {
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Chat Application");
-
-//        // Set the icon for the primary stage
-//        Image icon = new Image(getClass().getResourceAsStream("/GameHandler/lottikarotti_main/images/icon_game.jpg"));
-//        primaryStage.getIcons().add(icon);
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/com/ouroboros/chatapp/chatapp/image/emoji_icon.png")));
 
         primaryStage.show();
 
