@@ -170,7 +170,7 @@ public class HomepageController {
 
             javafx.application.Platform.runLater(() -> {
             if (finalChat != null) {
-                com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, finalChat.getName());
+                com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, finalChat.getName(), loggedInUser, (int) finalChat.getId());
             } else {
                 Stage stage = (Stage) chatListView.getScene().getWindow();
                 Toast.show(stage, "Failed to create chat", 3000);

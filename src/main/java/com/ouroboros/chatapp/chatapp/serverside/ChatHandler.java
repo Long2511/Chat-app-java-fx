@@ -64,7 +64,6 @@ public class ChatHandler {
         long newChatId = newChat.getId(); 
 
         //update to memory
-        chatUsersMap.put((int) newChatId, userIds);
         chats.add(newChat);
 
         // Send response
