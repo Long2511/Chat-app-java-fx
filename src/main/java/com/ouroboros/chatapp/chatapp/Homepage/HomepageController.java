@@ -1,5 +1,6 @@
 package com.ouroboros.chatapp.chatapp.Homepage;
 
+import com.ouroboros.chatapp.chatapp.ChatViewController;
 import com.ouroboros.chatapp.chatapp.MessagesViewController;
 import com.ouroboros.chatapp.chatapp.clientside.ChatService;
 import com.ouroboros.chatapp.chatapp.clientside.Toast;
@@ -201,8 +202,8 @@ public class HomepageController {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
                 AnchorPane chatView = loader.load();
                 //set the chat ID and sender ID in the controller
-                MessagesViewController controller = loader.getController();
-                controller.setChatAndSender(selectedChat.getChatId(), (int) loggedInUser.getId());
+                ChatViewController controller = loader.getController();
+                controller.setChatAndUser(selectedChat.getChatId(), (int) loggedInUser.getId());
 
                 chatViewPane.getChildren().setAll(chatView);
             } catch (IOException e) {
