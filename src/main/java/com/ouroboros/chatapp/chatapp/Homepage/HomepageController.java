@@ -194,9 +194,10 @@ public class HomepageController {
                     ChatViewController controller = loader.getController();
 
                     Chat fullChat = ChatService.getChatById(selectedChat.getChatId(), (int) loggedInUser.getId());
+                    controller.setParticipants(fullChat.getParticipants());
                     controller.setChatAndUser((int) fullChat.getId(), (int) loggedInUser.getId());
                     controller.setChatTitle(fullChat.getName());
-                    controller.setParticipants(fullChat.getParticipants());
+                    
                 // Replace the whole scene
                 Stage stage = (Stage) chatListView.getScene().getWindow();
                 stage.setScene(chatScene);
