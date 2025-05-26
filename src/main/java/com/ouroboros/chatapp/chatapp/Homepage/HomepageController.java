@@ -192,8 +192,11 @@ public class HomepageController {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
                     Scene chatScene = new Scene(loader.load());
                     ChatViewController controller = loader.getController();
-                    controller.setChatAndUser(selectedChat.getChatId(), (int) loggedInUser.getId());
-                    controller.setChatTitle(selectedChat.getTitle());
+
+                    Chat fullChat = ChatService.getChatById(selectedChat.getChatId(), (int) loggedInUser.getId());
+                    controller.setChatAndUser((int) fullChat.getId(), (int) loggedInUser.getId());
+                    controller.setChatTitle(fullChat.getName());
+                    controller.setParticipants(fullChat.getParticipants());
                 // Replace the whole scene
                 Stage stage = (Stage) chatListView.getScene().getWindow();
                 stage.setScene(chatScene);

@@ -22,7 +22,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
-import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import javafx.application.Platform;
 import javafx.stage.Modality;
@@ -33,7 +32,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -77,6 +78,8 @@ public class ChatViewController {
 
     private MessageService messageService;
 
+    private Map<Integer, String> userIdToName = new HashMap<>();
+
     // Thread for message updates
     private Thread messageListenerThread;
     private final AtomicBoolean isUpdateRunning = new AtomicBoolean(false);
@@ -93,7 +96,11 @@ public class ChatViewController {
     private int currentChatId;
     private int currentUserId;
 
-
+    public void setChatAndUser(int chatId, int userId) {
+        this.currentUserId = userId;
+        setChatId(chatId);
+    }
+    
     @FXML
     public void initialize() {
         // Initialize any necessary setup
@@ -123,6 +130,13 @@ public class ChatViewController {
                 stage.setOnCloseRequest(event -> cleanup());
             }
         });
+    }
+
+    public void setParticipants(List<User> participants) {
+        userIdToName.clear();
+        for (User user : participants) {
+            userIdToName.put((int) user.getId(), user.getUsername());
+        }
     }
 
     public void loadChatMessages(int chatId) {
@@ -380,10 +394,7 @@ public class ChatViewController {
             }
         }
     }
-    public void setChatAndUser(int chatId, int userId) {
-        this.currentUserId = userId;
-        setChatId(chatId);
-    }
+    
 
     public void addMessage(String message, boolean isFromCurrentUser) {
         TextArea messageArea = new TextArea(message);
@@ -521,51 +532,74 @@ public class ChatViewController {
     }
 
     private void renderMessage(Message msg) {
-        if (msg.isFile()) {
-            String filePath = msg.getFileUrl() != null && !msg.getFileUrl().isEmpty()
-                    ? msg.getFileUrl()
-                    : msg.getContent();
+    String senderName = userIdToName.getOrDefault(msg.getSenderId(), "Unknown");
 
-            String fileName = msg.getContent() != null && !msg.getContent().isEmpty()
-                    ? msg.getContent()
-                    : new File(filePath).getName();
+    if (msg.isFile()) {
+        String filePath = msg.getFileUrl() != null && !msg.getFileUrl().isEmpty()
+                ? msg.getFileUrl()
+                : msg.getContent();
 
-            Hyperlink fileLink = new Hyperlink("📎 " + fileName);
-            fileLink.setStyle("-fx-font-size: 14px; -fx-text-fill: #2a73ff; -fx-underline: false;");
-            fileLink.setOnAction(e -> {
-                try {
-                    File file = new File(filePath);
-                    if (!file.exists()) {
-                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle("File not found");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Cannot open file: " + filePath);
-                        alert.showAndWait();
-                        return;
-                    }
-                    Desktop.getDesktop().open(file);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
+        String fileName = msg.getContent() != null && !msg.getContent().isEmpty()
+                ? msg.getContent()
+                : new File(filePath).getName();
+
+        Hyperlink fileLink = new Hyperlink("📎 " + fileName);
+        fileLink.setStyle("-fx-font-size: 14px; -fx-text-fill: #2a73ff; -fx-underline: false;");
+        fileLink.setOnAction(e -> {
+            try {
+                File file = new File(filePath);
+                if (!file.exists()) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("File not found");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Cannot open file: " + filePath);
+                    alert.showAndWait();
+                    return;
                 }
-            });
+                Desktop.getDesktop().open(file);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
 
-            VBox fileMessageBox = new VBox(fileLink);
-            fileMessageBox.setSpacing(4);
-            fileMessageBox.setStyle("-fx-background-color: #dbeafe; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+        VBox fileMessageBox = new VBox();
+        fileMessageBox.setSpacing(4);
 
-            HBox container = new HBox(fileMessageBox);
-            container.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-            container.setPadding(new Insets(2, 10, 2, 10));
-            messageContainer.getChildren().add(container);
-        } else {
-            Label label = new Label(msg.getContent());
-            label.setWrapText(true);
-            label.setStyle("-fx-font-size: 14px; -fx-background-color: #e1ffc7; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
-
-            HBox textBox = new HBox(label);
-            textBox.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-            textBox.setPadding(new Insets(2, 10, 2, 10));
-            messageContainer.getChildren().add(textBox);
+        // Nếu không phải current user, thêm tên người gửi
+        if (msg.getSenderId() != currentUserId) {
+            Label senderLabel = new Label(senderName);
+            senderLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: gray;");
+            fileMessageBox.getChildren().add(senderLabel);
         }
+
+        fileMessageBox.getChildren().add(fileLink);
+        fileMessageBox.setStyle("-fx-background-color: #dbeafe; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+
+        HBox container = new HBox(fileMessageBox);
+        container.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        container.setPadding(new Insets(2, 10, 2, 10));
+        messageContainer.getChildren().add(container);
+
+    } else {
+        Label label = new Label(msg.getContent());
+        label.setWrapText(true);
+        label.setStyle("-fx-font-size: 14px; -fx-background-color: #e1ffc7; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+
+        VBox messageBox = new VBox();
+        messageBox.setSpacing(4);
+
+        if (msg.getSenderId() != currentUserId) {
+            Label senderLabel = new Label(senderName);
+            senderLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: gray;");
+            messageBox.getChildren().add(senderLabel);
+        }
+
+        messageBox.getChildren().add(label);
+
+        HBox textBox = new HBox(messageBox);
+        textBox.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        textBox.setPadding(new Insets(2, 10, 2, 10));
+        messageContainer.getChildren().add(textBox);
     }
+}
 }

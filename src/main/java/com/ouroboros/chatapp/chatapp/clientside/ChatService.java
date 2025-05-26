@@ -138,6 +138,10 @@ public class ChatService {
         }
     }
 
+    public static Chat getChatById(int chatId, int userId) {
+        List<Chat> allChats = getAllChats(userId);
+        return allChats.stream().filter(chat -> chat.getId() == chatId).findFirst().orElse(null);
+    }
     public static Chat getChatDetails(int chatId) {
         try {
             out.write("start: GET_CHAT_DETAILS\r\n");
