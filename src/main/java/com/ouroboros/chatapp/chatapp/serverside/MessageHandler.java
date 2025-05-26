@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.ouroboros.chatapp.chatapp.serverside.ChatHandler.chatUsersMap;
 import static com.ouroboros.chatapp.chatapp.serverside.ServerBackend.clientWriters;
 
 public class MessageHandler {
@@ -111,16 +110,15 @@ public class MessageHandler {
 
                 /// Handle realtime update message
                 // sent notify to other clients in the chat
-                if (chatUsersMap.get(chatId) != null) {
-                    for (int userIdInChat : chatUsersMap.get(chatId)) {
-                        if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
-                            for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
-                                userOut.write("start: ADD_NEW_MESSAGE\r\n");
-                                userOut.write("length: 1\r\n");
-                                newMsg.sendObject(userOut);
-                                userOut.write("end: ADD_NEW_MESSAGE\r\n");
-                                userOut.flush();
-                            }
+                List<Integer> userIdsInGroup = DatabaseUtils.getUserIdsInChat(chatId);
+                for (int userIdInChat : userIdsInGroup) {
+                    if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
+                        for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
+                            userOut.write("start: ADD_NEW_MESSAGE\r\n");
+                            userOut.write("length: 1\r\n");
+                            newMsg.sendObject(userOut);
+                            userOut.write("end: ADD_NEW_MESSAGE\r\n");
+                            userOut.flush();
                         }
                     }
                 }

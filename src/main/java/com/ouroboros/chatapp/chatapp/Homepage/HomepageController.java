@@ -40,7 +40,7 @@ public class HomepageController {
     @FXML
     private TextField chatName;
     private User loggedInUser;
-   
+
 
     private final javafx.animation.PauseTransition searchDelay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(0.5));
     private String lastSearchText = "";
@@ -170,7 +170,7 @@ public class HomepageController {
 
             javafx.application.Platform.runLater(() -> {
             if (finalChat != null) {
-                com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, finalChat.getName());
+                com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, finalChat.getName(), loggedInUser, (int) finalChat.getId());
             } else {
                 Stage stage = (Stage) chatListView.getScene().getWindow();
                 Toast.show(stage, "Failed to create chat", 3000);
@@ -231,7 +231,7 @@ private void handleChatSelection(MouseEvent event) {
         ChatPreview selectedChat = chatListView.getSelectionModel().getSelectedItem();
         if (selectedChat != null) {
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-iew.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
                 AnchorPane chatView = loader.load();
 
 
@@ -275,3 +275,4 @@ private void handleChatSelection(MouseEvent event) {
         }
     }*/
 }
+

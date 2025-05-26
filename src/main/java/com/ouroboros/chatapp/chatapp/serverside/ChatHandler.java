@@ -14,8 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChatHandler {
     public static final List<Chat> chats = Collections.synchronizedList(new ArrayList<>());
-    // TODO: chatUsersMap should be replaced with a database solution for scalability
-    public static final Map<Integer, List<Integer>> chatUsersMap = Collections.synchronizedMap(new java.util.HashMap<>());
+
     public static AtomicInteger chatIdCounter = new AtomicInteger(1);
 
     public static boolean isCreateChatRequest(String method) {
@@ -65,7 +64,6 @@ public class ChatHandler {
         long newChatId = newChat.getId(); 
 
         //update to memory
-        chatUsersMap.put((int) newChatId, userIds);
         chats.add(newChat);
 
         // Send response
