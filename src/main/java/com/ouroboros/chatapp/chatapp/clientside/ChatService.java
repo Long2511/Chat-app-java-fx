@@ -81,13 +81,27 @@ public class ChatService {
             out.flush();
 
             String line;
-            System.out.println("Sending request to get all chats for userId = " + userId);
+            System.out.println("Sending request to get all chats for userId = " + userId);//debuging
+            
             while (!(line = in.readLine()).equals("end: RESPONSE_GET_ALL_CHATS")) {
                 if (line.startsWith("length: ")) {
                     int length = Integer.parseInt(line.substring("length: ".length()));
                     for (int i = 0; i < length; i++) {
-                        chats.add(Chat.receiveObject(in));
-                        System.out.println("Chat received: " + chats.get(i).getName());
+                        Chat chat = Chat.receiveObject(in);
+
+                    // Đọc số lượng participants
+                        line = in.readLine();
+                        if (line.startsWith("participants: ")) {
+                            int count = Integer.parseInt(line.substring("participants: ".length()));
+                            List<User> participants = new ArrayList<>();
+                            for (int j = 0; j < count; j++) {
+                                participants.add(User.receiveObject(in));
+                            }
+                            chat.setParticipants(participants);
+                        }
+
+                        chats.add(chat);
+                        System.out.println("Chat received: " + chat.getName());
                     }
                 }
             }
