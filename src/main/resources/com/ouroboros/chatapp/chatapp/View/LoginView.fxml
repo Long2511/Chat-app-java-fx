@@ -2,18 +2,27 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
 <AnchorPane prefHeight="640.0" prefWidth="640.0" stylesheets="@../css/LoginView.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.LoginController">
     <children>
-        <VBox fx:id="loginForm" alignment="CENTER" layoutX="150.0" layoutY="183.0" prefHeight="274.0" prefWidth="340.0" spacing="15.0">
+        <VBox fx:id="loginForm" alignment="CENTER" layoutX="150.0" layoutY="183.0" prefHeight="343.0" prefWidth="340.0" spacing="15.0">
             <Label fx:id="welcomeLabel" text="Welcome back" />
             <TextField fx:id="emailField" onAction="#onLoginButtonClick" promptText="Email" />
             <PasswordField fx:id="passwordField" onAction="#onLoginButtonClick" promptText="Password" />
             <Button fx:id="loginButton" onAction="#onLoginButtonClick" styleClass="loginButton" text="Login" />
-            <HBox fx:id="registerPromptBox" alignment="CENTER" spacing="5.0">
-            <Button fx:id="forgotPasswordButton" layoutX="97.0" layoutY="10.0" onAction="#onForgotPasswordButtonClick" text="Forgot Password?" />
-                <Button fx:id="registerButton" onAction="#onRegisterButtonClick" text="Register here" />
-            </HBox>
+         <VBox alignment="CENTER" prefHeight="63.0" prefWidth="300.0">
+            <children>
+                  <HBox fx:id="registerPromptBox" alignment="CENTER" prefHeight="0.0" prefWidth="300.0" spacing="5.0">
+                      <Label fx:id="registerPromptLabel" text="Don't have an account?" />
+                      <Button fx:id="registerButton" onAction="#onRegisterButtonClick" text="Register here" />
+                  </HBox>
+               <Button fx:id="forgotPasswordButton" onAction="#onForgotPasswordButtonClick" prefHeight="10.0" prefWidth="157.0" text="Forgot Password?" textAlignment="CENTER">
+                  <font>
+                     <Font size="10.0" />
+                  </font></Button>
+            </children>
+         </VBox>
         </VBox>
     </children>
 </AnchorPane>
