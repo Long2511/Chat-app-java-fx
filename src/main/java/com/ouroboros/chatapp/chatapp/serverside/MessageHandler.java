@@ -61,12 +61,6 @@ public class MessageHandler {
                 out.write("start: RESPONSE_MESSAGES\r\n");
                 out.write("length: " + length + "\r\n");
                 for (Message msg : messages) {
-                    if (msg.getChatId() == chatId) msg.sendObject(out);
-                }
-
-                out.write("start: RESPONSE_MESSAGES\r\n");
-                out.write("length: " + length + "\r\n");
-                for (Message msg : messages) {
                     if (msg.getChatId() == chatId) {
                         msg.sendObject(out);
                     }

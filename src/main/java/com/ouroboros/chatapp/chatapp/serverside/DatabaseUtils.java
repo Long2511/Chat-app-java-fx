@@ -179,6 +179,7 @@ public class DatabaseUtils {
             }
         }
     }
+
     public static List<Chat> loadChatsForUser(int userId) {
         List<Chat> userChats = new ArrayList<>();
         try (Connection conn = getConnection()) {
@@ -191,38 +192,38 @@ public class DatabaseUtils {
                 JOIN users u ON u.id = cp.user_id
                 WHERE c.id IN (SELECT chat_id FROM chat_participants WHERE user_id = ?)
                 ORDER BY c.id, u.id
-                """;    
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, userId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                Map<Long, Chat> chatMap = new HashMap<>();
-                while (rs.next()) {
-                    long chatId = rs.getLong("id");
-                    Chat chat = chatMap.get(chatId);
-                    if (chat == null) {
-                        chat = new Chat();
-                        chat.setId(chatId);
-                        chat.setName(rs.getString("name"));
-                        chat.setType(rs.getString("type"));
-                        chat.setCreatedAt(rs.getTimestamp("created_at").toString());
-                        chat.setUpdatedAt(rs.getTimestamp("updated_at").toString());
-                        chat.setParticipants(new ArrayList<>());
-                        chatMap.put(chatId, chat);
+                """;
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, userId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    Map<Long, Chat> chatMap = new HashMap<>();
+                    while (rs.next()) {
+                        long chatId = rs.getLong("id");
+                        Chat chat = chatMap.get(chatId);
+                        if (chat == null) {
+                            chat = new Chat();
+                            chat.setId(chatId);
+                            chat.setName(rs.getString("name"));
+                            chat.setType(rs.getString("type"));
+                            chat.setCreatedAt(rs.getTimestamp("created_at").toString());
+                            chat.setUpdatedAt(rs.getTimestamp("updated_at").toString());
+                            chat.setParticipants(new ArrayList<>());
+                            chatMap.put(chatId, chat);
+                        }
+                        long pid = rs.getLong("participant_id");
+                        if (pid != userId) {
+                            User u = new User();
+                            u.setId(pid);
+                            u.setUsername(rs.getString("username"));
+                            chat.getParticipants().add(u);
+                        }
                     }
-                    long pid = rs.getLong("participant_id");
-                    if (pid != userId) {
-                        User u = new User();
-                        u.setId(pid);
-                        u.setUsername(rs.getString("username"));
-                        chat.getParticipants().add(u);
-                    }
+                    userChats.addAll(chatMap.values());
                 }
-                userChats.addAll(chatMap.values());
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
+        return userChats;
     }
-    return userChats;
-}
 }

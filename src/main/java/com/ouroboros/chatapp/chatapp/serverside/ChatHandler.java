@@ -70,29 +70,14 @@ public class ChatHandler {
     }
 
     public static boolean handleGetChatsRequest(BufferedReader in, BufferedWriter out) throws IOException {
-    int userId = -1;
-    String line;
-    while (!(line = in.readLine()).equals("end: GET_ALL_CHATS")) {
-         System.out.println("DEBUG: received line = " + line);//debug
-        if (line.startsWith("userId: ")) {
-            userId = Integer.parseInt(line.substring("userId: ".length()));
-            System.out.println("DEBUG: Received get chats request for userId: " + userId);
-        }
-    }
-
-    /*List<Chat> resultChats = new ArrayList<>();
-    System.out.println("DEBUG: Total chats in system: " + chats.size());
-
-    for (Chat chat : chats) {
-        System.out.println("DEBUG: Checking chat ID: " + chat.getId());
-        if (chatUsersMap.containsKey(chat.getId())) {
-            System.out.println("DEBUG: Chat " + chat.getId() + " users: " + chatUsersMap.get(chat.getId()));
-            if (chatUsersMap.get(chat.getId()).contains(userId)) {
-                resultChats.add(chat);
-                System.out.println("DEBUG: Added chat " + chat.getId() + " to results - Name: " + chat.getName());
+        int userId = -1;
+        String line;
+        while (!(line = in.readLine()).equals("end: GET_ALL_CHATS")) {
+            if (line.startsWith("userId: ")) {
+                userId = Integer.parseInt(line.substring("userId: ".length()));
+                System.out.println("DEBUG: Received get chats request for userId: " + userId);
             }
         }
-    }*/
 
     
     // Load chats from database instead of memory
