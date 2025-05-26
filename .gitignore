@@ -31,3 +31,8 @@ replay_pid*
 /.vscode/settings.json
 .idea/misc.xml
 *.iml
+.idea/jarRepositories.xml
+
+.idea/jarRepositories.xml
+.idea/misc.xml
+.idea

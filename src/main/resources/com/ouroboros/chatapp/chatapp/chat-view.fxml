@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Rectangle?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
 
 <!-- Chat view layout -->
 
@@ -21,16 +16,18 @@
                 <Insets bottom="10" left="10" right="10" top="10" />
             </padding>
             <children>
-                <!-- Small rectangle (could be replaced by an avatar later) -->
-                <Rectangle fx:id="avatarRect" arcHeight="8.0" arcWidth="8.0" fill="#7b97b2" height="32.0" stroke="BLACK" width="32.0" />
+            <Button fx:id="backButton" mnemonicParsing="false" onAction="#handleBackButton" prefHeight="25.0" prefWidth="67.0" text="Back" />
+            <Region prefHeight="33.0" prefWidth="380.0" />
 
                 <!-- Username label -->
-                <Label fx:id="chatTitle" alignment="CENTER_LEFT" prefHeight="42.0" prefWidth="76.0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Username" />
+                <Label fx:id="chatTitle" alignment="CENTER_LEFT" prefHeight="33.0" prefWidth="124.0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Username" textAlignment="RIGHT" />
+                <!-- Small rectangle (could be replaced by an avatar later) -->
+                <Rectangle fx:id="avatarRect" arcHeight="8.0" arcWidth="8.0" fill="#7b97b2" height="32.0" stroke="BLACK" width="32.0" />
             </children>
         </HBox>
 
         <!-- ===== Scrollable message area ===== -->
-        <ScrollPane fx:id="messageScroll" fitToWidth="true" layoutY="61.0" prefHeight="519.0" prefWidth="620.0" AnchorPane.bottomAnchor="60.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="61.0">
+        <ScrollPane fx:id="messageScroll" fitToWidth="true" layoutY="55.0" prefHeight="525.0" prefWidth="620.0" AnchorPane.bottomAnchor="60.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="55.0">
             <content>
                 <!-- Messages will be added dynamically to this VBox by the controller -->
                 <VBox fx:id="messageContainer" prefWidth="600.0" spacing="10.0" />

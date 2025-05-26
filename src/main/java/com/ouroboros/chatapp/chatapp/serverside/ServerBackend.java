@@ -1,16 +1,16 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
+import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
+import com.ouroboros.chatapp.chatapp.serverside.UserHandler;
 
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
+import java.net.*;
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 public class ServerBackend {
     private static final int PORT = 8080;
@@ -178,10 +178,6 @@ public class ServerBackend {
                     }
 
                     System.out.println("Logout request");
-                } else if (ChatHandler.isCreateChatRequest(line)) {
-                    ChatHandler.handleCreateChatRequest(in, out);
-                } else if (ChatHandler.isGetChatsRequest(line)) {
-                    ChatHandler.handleGetChatsRequest(in, out);
                 }
             }
 
@@ -191,8 +187,7 @@ public class ServerBackend {
             try {
                 clientSocket.close();
                 System.out.println("Client disconnected");
-            } catch (IOException ignored) {
-            }
+            } catch (IOException ignored) {}
         }
     }
 }
