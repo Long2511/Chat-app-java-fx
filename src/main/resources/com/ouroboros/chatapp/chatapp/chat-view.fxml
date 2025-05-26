@@ -40,6 +40,9 @@
                 <!-- Text field for message input -->
                 <TextField fx:id="messageInput" prefHeight="45.0" prefWidth="567.0" promptText="Type your message..." HBox.hgrow="ALWAYS" />
 
+                <!-- File upload button -->
+                <Button fx:id="fileButton" mnemonicParsing="false" onAction="#handleFileUpload" prefHeight="42.0" prefWidth="56.0" styleClass="file-button" text="📁" />
+
                 <!-- Send button with an up‑arrow icon -->
                 <Button fx:id="sendButton" mnemonicParsing="false" onAction="#handleSendMessage" prefHeight="42.0" prefWidth="56.0" styleClass="send-button" stylesheets="@./css/chatView.css" text="Send" />
             </children>
