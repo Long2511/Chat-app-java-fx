@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -13,7 +18,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.Homepage.HomepageController">
+<AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.Homepage.HomepageController">
     <children>
         <TabPane fx:id="tabPane" layoutX="10.0" layoutY="10.0" prefHeight="480.0" prefWidth="580.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <tabs>
@@ -42,8 +47,13 @@
                                     <Insets />
                                  </HBox.margin>
                               </Button>
-                              <Region prefHeight="30.0" prefWidth="37.0" />
-                              <TextField fx:id="chatName" prefHeight="25.0" prefWidth="185.0" promptText="Chat Name" />
+                              <Button fx:id="deleteAccountButton" onAction="#handleDeleteAccount" prefHeight="30.0" prefWidth="136.0" styleClass="button" stylesheets="@../css/Homepage.css" text="Delete Account">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Button>
+                              <Region prefHeight="30.0" prefWidth="26.0" />
+                              <TextField fx:id="chatName" prefHeight="51.0" prefWidth="187.0" promptText="Chat Name" />
                               <Region layoutX="199.0" layoutY="10.0" prefHeight="30.0" prefWidth="41.0" />
                                         <Button fx:id="createButton" alignment="CENTER" onAction="#handleCreate" prefHeight="30.0" prefWidth="90.0" styleClass="button" stylesheets="@../css/Homepage.css" text="Create" textAlignment="CENTER">
                                  <font>
