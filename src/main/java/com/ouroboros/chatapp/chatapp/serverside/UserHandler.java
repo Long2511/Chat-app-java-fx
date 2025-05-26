@@ -5,6 +5,9 @@ import com.ouroboros.chatapp.chatapp.datatype.User;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 
 public class UserHandler {
@@ -33,6 +36,16 @@ public class UserHandler {
         }
         out.println("end: RESPONSE_USERS");
         out.flush();
+    }
+
+    public static void deleteAccount(int userId) {
+        try (Connection conn = DatabaseUtils.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("DELETE FROM users WHERE id = ?")) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
     }
 }
 

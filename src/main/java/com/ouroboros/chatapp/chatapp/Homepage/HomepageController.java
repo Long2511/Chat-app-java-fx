@@ -5,6 +5,7 @@ import com.ouroboros.chatapp.chatapp.clientside.ChatService;
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -198,6 +199,20 @@ public class HomepageController {
             }
         }
     }
+
+    @FXML
+    public void handleDeleteAccount(ActionEvent actionEvent) {
+        try {
+            com.ouroboros.chatapp.chatapp.clientside.UserService.deleteAccount(loggedInUser.getId());
+            System.out.println("Account deleted successfully.");
+            handleLogout(); // Logout after deletion
+        } catch (Exception e) {
+            System.err.println("Error deleting account: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
 
    /*  @FXML
     private void handleTabChange() {

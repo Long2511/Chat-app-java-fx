@@ -81,6 +81,16 @@ public class UserService {
         return users;
     }
 
+    public static void deleteAccount(long id) throws IOException {
+        BufferedWriter out = ClientConnection.getSharedWriter();
+        BufferedReader in = ClientConnection.getSharedReader();
+
+        out.write("start: DELETE_ACCOUNT\r\n");
+        out.write("userId: " + id + "\r\n");
+        out.write("end: DELETE_ACCOUNT\r\n");
+        out.flush();
+    }
+
     /**
      * Authenticates a user with the server
      *

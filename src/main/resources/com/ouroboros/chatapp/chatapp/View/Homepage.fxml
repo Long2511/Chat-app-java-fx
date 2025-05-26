@@ -42,7 +42,12 @@
                                     <Insets />
                                  </HBox.margin>
                               </Button>
-                              <Region prefHeight="30.0" prefWidth="111.0" />
+                              <Button fx:id="deleteAccountButton" onAction="#handleDeleteAccount" prefHeight="30.0" prefWidth="125.0" styleClass="button" stylesheets="@../css/Homepage.css" text="Delete Account">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Button>
+                              <Region prefHeight="30.0" prefWidth="26.0" />
                               <TextField fx:id="chatName" prefHeight="25.0" prefWidth="135.0" promptText="Chat Name" />
                                         <Button fx:id="createButton" alignment="CENTER" onAction="#handleCreate" prefHeight="30.0" prefWidth="90.0" styleClass="button" stylesheets="@../css/Homepage.css" text="Create" textAlignment="CENTER">
                                  <font>
