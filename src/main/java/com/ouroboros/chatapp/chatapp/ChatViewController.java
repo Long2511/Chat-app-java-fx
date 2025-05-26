@@ -1,10 +1,12 @@
 package com.ouroboros.chatapp.chatapp;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
@@ -13,6 +15,13 @@ import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import javafx.scene.control.Alert;
+
+import java.io.IOException;
+
+import com.ouroboros.chatapp.chatapp.clientside.Toast;
 
 public class ChatViewController {
     @FXML
@@ -38,6 +47,9 @@ public class ChatViewController {
     
     @FXML
     private Button sendButton;
+
+    @FXML
+    private Button backButton;
 
     @FXML
     public void initialize() {
@@ -90,4 +102,15 @@ public class ChatViewController {
     public void setAvatarColor(String color) {
         avatarRect.setFill(Color.web(color));
     }
-} 
+
+    @FXML
+    private void handleBackButton() {
+            try {
+                SceneChanger.changeScene("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml");
+            } catch (IOException e) {
+                Stage stage = (Stage) messageContainer.getScene().getWindow();
+
+                Toast.show(stage, "Cannot go back", 4000);
+            }
+    }
+}

@@ -33,7 +33,7 @@
                                 <!-- Buttons -->
                                 <HBox spacing="10.0">
                            <children>
-                              <Region prefHeight="23.0" prefWidth="79.0" />
+                              <Region prefHeight="30.0" prefWidth="60.0" />
                                         <Button fx:id="logoutButton" onAction="#handleLogout" prefHeight="30.0" prefWidth="90.0" styleClass="button" stylesheets="@../css/Homepage.css" text="Logout">
                                  <font>
                                     <Font size="14.0" />
@@ -49,11 +49,15 @@
                               </Button>
                               <Region prefHeight="30.0" prefWidth="26.0" />
                               <TextField fx:id="chatName" prefHeight="25.0" prefWidth="135.0" promptText="Chat Name" />
+                              <Region prefHeight="30.0" prefWidth="37.0" />
+                              <TextField fx:id="chatName" prefHeight="25.0" prefWidth="185.0" promptText="Chat Name" />
+                              <Region layoutX="199.0" layoutY="10.0" prefHeight="30.0" prefWidth="41.0" />
                                         <Button fx:id="createButton" alignment="CENTER" onAction="#handleCreate" prefHeight="30.0" prefWidth="90.0" styleClass="button" stylesheets="@../css/Homepage.css" text="Create" textAlignment="CENTER">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
                               </Button>
+                              <Region layoutX="199.0" layoutY="10.0" prefHeight="30.0" prefWidth="72.0" />
                            </children>
                                 </HBox>
                             </children>
