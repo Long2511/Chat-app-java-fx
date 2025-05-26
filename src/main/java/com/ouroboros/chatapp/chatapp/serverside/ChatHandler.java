@@ -12,14 +12,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class ChatHandler {
     public static final List<Chat> chats = Collections.synchronizedList(new ArrayList<>());
     // TODO: chatUsersMap should be replaced with a database solution for scalability
     public static final Map<Integer, List<Integer>> chatUsersMap = Collections.synchronizedMap(new java.util.HashMap<>());
-    public static AtomicInteger chatIdCounter = new AtomicInteger(1);
 
     public static boolean isCreateChatRequest(String method) {
         return method.equals("start: CREATE_CHAT");

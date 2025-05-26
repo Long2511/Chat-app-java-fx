@@ -1,15 +1,17 @@
 package com.ouroboros.chatapp.chatapp;
 
-import com.ouroboros.chatapp.chatapp.datatype.Message;
-import com.ouroboros.chatapp.chatapp.datatype.User;
-import com.ouroboros.chatapp.chatapp.clientside.MessageService;
 import com.ouroboros.chatapp.chatapp.clientside.ClientConnection;
 import com.ouroboros.chatapp.chatapp.clientside.MessageService;
+import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import com.ouroboros.chatapp.chatapp.datatype.Message;
+import com.ouroboros.chatapp.chatapp.datatype.User;
 import com.ouroboros.chatapp.chatapp.serverside.EncryptionUtil;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -19,74 +21,55 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
-import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
-import javafx.scene.control.Alert;
-import javafx.stage.Stage;
-import javafx.application.Platform;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
-import java.io.BufferedReader;
+import javafx.stage.Stage;
 
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
-
-import com.ouroboros.chatapp.chatapp.clientside.Toast;
-import javafx.stage.FileChooser;
-import javafx.geometry.Insets;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChatViewController {
-    @FXML
-    private HBox topBar;
-
-    @FXML
-    private Rectangle avatarRect;
-
-    @FXML
-    private Label chatTitle;
-
-    @FXML
-    private ScrollPane messageScroll;
-
-    @FXML
-    private VBox messageContainer;
-
-    @FXML
-    private HBox inputBar;
-
-    @FXML
-    private TextField messageInput;
-
-    @FXML
-    private Button sendButton;
-
-    @FXML
-    private Button backButton;
-
-    private MessageService messageService;
-
-    // Thread for message updates
-    private Thread messageListenerThread;
     private final AtomicBoolean isUpdateRunning = new AtomicBoolean(false);
-
-    // Latch to ensure initial message load completes before starting the update thread
-    private CountDownLatch initialLoadLatch;
-
     // Flag to indicate if we're currently sending a message
     private final AtomicBoolean isSendingMessage = new AtomicBoolean(false);
-
+    @FXML
+    private HBox topBar;
+    @FXML
+    private Rectangle avatarRect;
+    @FXML
+    private Label chatTitle;
+    @FXML
+    private ScrollPane messageScroll;
+    @FXML
+    private VBox messageContainer;
+    @FXML
+    private HBox inputBar;
+    @FXML
+    private TextField messageInput;
+    @FXML
+    private Button sendButton;
+    @FXML
+    private Button backButton;
+    private MessageService messageService;
+    // Thread for message updates
+    private Thread messageListenerThread;
+    // Latch to ensure initial message load completes before starting the update thread
+    private CountDownLatch initialLoadLatch;
     @FXML
     private Button fileButton;
 
@@ -380,6 +363,7 @@ public class ChatViewController {
             }
         }
     }
+
     public void setChatAndUser(int chatId, int userId) {
         this.currentUserId = userId;
         setChatId(chatId);
@@ -410,10 +394,6 @@ public class ChatViewController {
 
     public void setChatTitle(String username) {
         chatTitle.setText(username);
-    }
-
-    public void setCurrentUser(User currentUser) {
-        this.currentUserId = (int) currentUser.getId();
     }
 
     public void setChatId(int chatId) {
@@ -448,6 +428,10 @@ public class ChatViewController {
         User user = new User();
         user.setId(currentUserId);
         return user;
+    }
+
+    public void setCurrentUser(User currentUser) {
+        this.currentUserId = (int) currentUser.getId();
     }
 
     /**

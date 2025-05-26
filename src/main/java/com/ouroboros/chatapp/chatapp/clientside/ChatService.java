@@ -1,7 +1,6 @@
 package com.ouroboros.chatapp.chatapp.clientside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
-import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.BufferedReader;
@@ -10,12 +9,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
 
 
 public class ChatService {
@@ -37,23 +30,6 @@ public class ChatService {
         }
     }
 
-    public synchronized static List<User> searchUsers(List<String> usernames) {
-        try {
-            out.write("start: SEARCH_USERS_BY_NAME\r\n");
-            out.write("length: " + usernames.size() + "\r\n");
-            for (String username : usernames) {
-                out.write("username: " + username + "\r\n");
-            }
-            out.write("end: SEARCH_USERS_BY_NAME\r\n");
-            out.flush();
-
-            return receiveUsers();
-        } catch (IOException e) {
-            System.err.println("Error searching users: " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
     private synchronized static List<User> receiveUsers() throws IOException {
         String line;
         searchResults.clear();
@@ -66,10 +42,6 @@ public class ChatService {
             }
         }
         return new ArrayList<>(searchResults);
-    }
-
-    public synchronized static Message getMessages(int chatId) {
-        return null;
     }
 
     public synchronized static List<Chat> getAllChats(int userId) {
@@ -109,33 +81,6 @@ public class ChatService {
             System.err.println("Error retrieving chats: " + e.getMessage());
         }
         return chats;
-    }
-
-    public synchronized static Chat createChat(List<User> users, String chatName) {
-        try {
-            out.write("start: CREATE_CHAT\r\n");
-            out.write("name: " + chatName + "\r\n");
-            out.write("users: " + users.size() + "\r\n");
-            for (User user : users) {
-                user.sendObject(out);
-            }
-            out.write("end: CREATE_CHAT\r\n");
-            out.flush();
-
-            // Receive response
-            String line;
-            while (!(line = in.readLine()).equals("end: RESPONSE_CREATE_CHAT")) {
-                if (line.equals("start: RESPONSE_CREATE_CHAT")) {
-                    if (line.startsWith("chatId: ")) {
-                        int chatId = Integer.parseInt(line.substring("chatId: ".length()));
-                        return new Chat(chatId, chatName, users);
-                    }
-                }
-            }
-            return null;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static Chat getChatDetails(int chatId) {
