@@ -1,5 +1,6 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
+
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
@@ -192,6 +193,7 @@ public class ServerBackend {
 
     private static void handleSendMessage(BufferedReader in, BufferedWriter out) {
         Logger logger = Logger.getLogger(ServerBackend.class.getName());
+
         try {
             int chatId = -1;
             int senderId = -1;
@@ -204,6 +206,8 @@ public class ServerBackend {
                     chatId = Integer.parseInt(line.substring("chatId: ".length()));
                 } else if (line.startsWith("senderId: ")) {
                     senderId = Integer.parseInt(line.substring("senderId: ".length()));
+                } else if (line.startsWith("messageType: ")) {
+                    type = line.substring("messageType: ".length()).toUpperCase();
                 } else if (line.startsWith("content: ")) {
                     content = line.substring("content: ".length());
                 }
@@ -218,18 +222,21 @@ public class ServerBackend {
                 java.time.LocalDateTime now = java.time.LocalDateTime.now();
                 message.setCreatedAt(now);
                 message.setUpdatedAt(now);
-                System.out.println("handleSendMessage received: " + message);
 
-                // Save message to the database
+                System.out.println("[SERVER] Received message: type=" + type + ", content=" + content);
+
                 MessageHandler.saveMessageToDatabase(message);
-                System.out.println("handleSendMessage saved to database: " + message);
+                System.out.println("[SERVER] Message saved to DB");
 
-
-                // Handle sending the message
                 MessageHandler.handleSendMessage(chatId, senderId, content, out);
+            } else {
+                System.err.println("[SERVER] Incomplete message. One or more fields missing.");
             }
+
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error handling SEND_MESSAGE", e);
         }
     }
 }
+
+
