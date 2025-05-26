@@ -1,6 +1,3 @@
-// ✅ REVISED FILE: HomepageController.java
-// Tính năng: Tạo chat mới (PRIVATE hoặc GROUP), lưu vào bảng `chats` và `chat_participants`, và tự động mở giao diện chat sau khi tạo thành công
-
 package com.ouroboros.chatapp.chatapp.Homepage;
 
 import com.ouroboros.chatapp.chatapp.ChatView;
@@ -59,8 +56,7 @@ public class HomepageController {
             @Override
             protected void updateItem(User user, boolean empty) {
                 super.updateItem(user, empty);
-                setText((empty || user == null) ? null : user.getUsername() +
-                        (user.getStatus() != null ? " [" + user.getStatus() + "]" : ""));
+                setText((empty || user == null) ? null : user.getUsername());
             }
         });
 

@@ -42,7 +42,7 @@
                                     <Insets />
                                  </HBox.margin>
                               </Button>
-                              <Button fx:id="deleteAccountButton" onAction="#handleDeleteAccount" prefHeight="30.0" prefWidth="136.0" styleClass="button" stylesheets="@../css/Homepage.css" text="Delete Account">
+                              <Button fx:id="deleteAccountButton" onAction="#handleDeleteAccount" prefHeight="29.0" prefWidth="137.0" styleClass="button" stylesheets="@../css/Homepage.css" text="Delete Account">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
@@ -72,7 +72,7 @@
                             </padding>
                             <children>
                                 <Label text="Select a chat to view messages" />
-                                <ListView fx:id="chatListView" fixedCellSize="40" onMouseClicked="#handleChatSelection" prefHeight="200.0" />
+                                <ListView fx:id="chatListView" fixedCellSize="40" onMouseClicked="#handleChatSelection" prefHeight="900.0" prefWidth="609.0" />
                                 <AnchorPane fx:id="chatViewPane" prefHeight="320.0" prefWidth="580.0" />
                             </children>
                         </VBox>

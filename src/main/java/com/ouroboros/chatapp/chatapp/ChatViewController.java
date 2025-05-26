@@ -156,7 +156,7 @@ public class ChatViewController {
                 Platform.runLater(() -> {
                     messageContainer.getChildren().clear();
                     for (Message message : messages) {
-                        renderMessage(message);
+                        addMessageToScroll(message, false);
                     }
                     // Scroll to bottom
                     messageScroll.setVvalue(1.0);
@@ -209,14 +209,9 @@ public class ChatViewController {
                         Socket socket = ClientConnection.getSharedSocket();
                         if (socket.getInputStream().available() > 0) {
                             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                            // Try to read a line without blocking indefinitely
-                            String line = null;
-                            if (reader.ready()) {
-                                line = reader.readLine();
-                            }
-
-                            if (line != null && line.equals("start: ADD_NEW_MESSAGE")) {
+                            // Read the next line (we know data is available)
+                            String line = reader.readLine();
+                            if ("start: ADD_NEW_MESSAGE".equals(line)) {
                                 Message newMessage = null;
 
                                 System.out.println("Received new message marker for chat ID: " + currentChatId);
@@ -239,9 +234,7 @@ public class ChatViewController {
                                 if (newMessage != null && newMessage.getChatId() == currentChatId) {
                                     final Message displayMessage = newMessage;
                                     Platform.runLater(() -> {
-                                        renderMessage(displayMessage);
-                                        // Scroll to bottom
-                                        messageScroll.setVvalue(1.0);
+                                        addMessageToScroll(displayMessage, false);
                                     });
                                 }
                             }
@@ -303,26 +296,15 @@ public class ChatViewController {
     private void handleSendMessage() {
         String message = messageInput.getText().trim();
         if (!message.isEmpty() && !isSendingMessage.get()) {
-            // Clear the message field immediately for better user experience
             String messageToBeSent = message;
             messageInput.clear();
-
-            // Mark that we're sending a message to avoid socket conflicts
             isSendingMessage.set(true);
 
-            // Send message in a background thread with CompletableFuture instead of raw Thread
             CompletableFuture.runAsync(() -> {
                 try {
-                    System.out.println("Sending message: " + messageToBeSent);
                     messageService.sendMessage(currentChatId, currentUserId, messageToBeSent);
-
-                    // Update UI with the sent message - we don't need to wait for server confirmation
-                    Platform.runLater(() -> {
-                        addMessage(messageToBeSent, true);
-                        messageScroll.setVvalue(1.0);
-                    });
-
-                    System.out.println("Message sent successfully");
+                    // Let server push render via listener; just scroll viewport
+                    Platform.runLater(() -> messageScroll.setVvalue(1.0));
                 } catch (IOException e) {
                     Platform.runLater(() -> {
                         Stage stage = (Stage) messageContainer.getScene().getWindow();
@@ -333,7 +315,6 @@ public class ChatViewController {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 } finally {
-                    // Reset the sending flag regardless of success/failure
                     isSendingMessage.set(false);
                 }
             });
@@ -383,7 +364,7 @@ public class ChatViewController {
                 messageService.sendFile(msg, selectedFile);
 
                 // 3. Add the message to the UI immediately
-                renderMessage(msg);
+                addMessageToScroll(msg, true);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -396,25 +377,82 @@ public class ChatViewController {
     }
     
 
-    public void addMessage(String message, boolean isFromCurrentUser) {
-        TextArea messageArea = new TextArea(message);
-        messageArea.setWrapText(true);
-        messageArea.setEditable(false);
-        messageArea.setPrefRowCount(1);
-        messageArea.setMaxWidth(400);
-
-        // Add CSS classes
-        messageArea.getStyleClass().add("message-area");
-        messageArea.getStyleClass().add(isFromCurrentUser ? "current-user-message" : "other-user-message");
-
-        HBox messageBox = new HBox(messageArea);
-        messageBox.getStyleClass().add("message-box");
-        messageBox.setAlignment(isFromCurrentUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-        messageBox.setMaxWidth(messageScroll.getWidth());
-
-        messageContainer.getChildren().add(messageBox);
-        messageContainer.getStyleClass().add("message-container");
-
+    /**
+     * Adds a message to the UI, supporting both String and Message types.
+     * If a String is provided, it is treated as a simple text message from the current user or others.
+     * If a Message is provided, it supports both text and file messages.
+     *
+     * @param msgObj The message to add (String or Message)
+     * @param isFromCurrentUser Only used if msgObj is a String. Ignored for Message objects.
+     */
+    public void addMessageToScroll(Object msgObj, boolean isFromCurrentUser) {
+        if (msgObj instanceof String) {
+            // Handle as simple text message
+            String message = (String) msgObj;
+            TextArea messageArea = new TextArea(message);
+            messageArea.setWrapText(true);
+            messageArea.setEditable(false);
+            messageArea.setPrefRowCount(1);
+            messageArea.setMaxWidth(400);
+            messageArea.getStyleClass().add("message-area");
+            messageArea.getStyleClass().add(isFromCurrentUser ? "current-user-message" : "other-user-message");
+            HBox messageBox = new HBox(messageArea);
+            messageBox.getStyleClass().add("message-box");
+            messageBox.setAlignment(isFromCurrentUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+            messageBox.setMaxWidth(messageScroll.getWidth());
+            // Bind box width instead of snapshot getWidth()
+            messageBox.maxWidthProperty().bind(messageContainer.widthProperty());
+            messageContainer.getChildren().add(messageBox);
+            messageContainer.getStyleClass().add("message-container");
+        } else if (msgObj instanceof Message) {
+            Message msg = (Message) msgObj;
+            if (msg.isFile()) {
+                String filePath = msg.getFileUrl() != null && !msg.getFileUrl().isEmpty()
+                        ? msg.getFileUrl()
+                        : msg.getContent();
+                String fileName = msg.getContent() != null && !msg.getContent().isEmpty()
+                        ? msg.getContent()
+                        : new File(filePath).getName();
+                Hyperlink fileLink = new Hyperlink("📎 " + fileName);
+                fileLink.setStyle("-fx-font-size: 14px; -fx-text-fill: #2a73ff; -fx-underline: false;");
+                fileLink.setOnAction(e -> {
+                    try {
+                        File file = new File(filePath);
+                        if (!file.exists()) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("File not found");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Cannot open file: " + filePath);
+                            alert.showAndWait();
+                            return;
+                        }
+                        Desktop.getDesktop().open(file);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                });
+                VBox fileMessageBox = new VBox(fileLink);
+                fileMessageBox.setSpacing(4);
+                fileMessageBox.setStyle("-fx-background-color: #dbeafe; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+                HBox container = new HBox(fileMessageBox);
+                container.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+                container.setPadding(new Insets(2, 10, 2, 10));
+                // Optionally bind width for file boxes too
+                container.maxWidthProperty().bind(messageContainer.widthProperty());
+                messageContainer.getChildren().add(container);
+            } else {
+                Label label = new Label(msg.getContent());
+                label.setWrapText(true);
+                label.setStyle("-fx-font-size: 14px; -fx-background-color: #e1ffc7; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+                HBox textBox = new HBox(label);
+                textBox.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+                textBox.setPadding(new Insets(2, 10, 2, 10));
+                textBox.maxWidthProperty().bind(messageContainer.widthProperty());
+                messageContainer.getChildren().add(textBox);
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported message type: " + (msgObj == null ? "null" : msgObj.getClass()));
+        }
         // Scroll to bottom
         messageScroll.setVvalue(1.0);
     }
@@ -601,5 +639,5 @@ public class ChatViewController {
         textBox.setPadding(new Insets(2, 10, 2, 10));
         messageContainer.getChildren().add(textBox);
     }
-}
+  }
 }

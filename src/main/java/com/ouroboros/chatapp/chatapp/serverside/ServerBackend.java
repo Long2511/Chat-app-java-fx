@@ -1,12 +1,8 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 
-import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
-import com.ouroboros.chatapp.chatapp.serverside.MessageHandler;
-import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
-
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -109,7 +105,7 @@ public class ServerBackend {
                     if (user != null) {
                         clientUserId = user.getId(); // Set the client user ID
                         // Add the writer to the map with user ID as key
-                        clientWriters.computeIfAbsent((long) clientUserId, k -> new ArrayList<>()).add(out);
+                        clientWriters.computeIfAbsent(clientUserId, k -> new ArrayList<>()).add(out);
 
                         System.out.println("Login successful for: " + email);
                         out.write("start: AUTH_RESPONSE\r\n");
