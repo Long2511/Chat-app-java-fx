@@ -51,33 +51,21 @@ public class ChatHandler {
             return;
         }
 
-        // Create a new chat
-        int chatId = chatIdCounter.getAndIncrement();
+        // Create a new chat object (no id yet)
         Chat newChat = new Chat();
-        newChat.setId(chatId);
         newChat.setName(chatName);
-        newChat.setType(userIds.size() > 1 ? "group" : "direct");
+        newChat.setType(userIds.size() > 1 ? "GROUP" : "PRIVATE");
 
-        if (!chatUsersMap.containsKey(chatId)) {
-            chatUsersMap.put(chatId, new ArrayList<>());
-        }
-        for (int userId : userIds) {
-            chatUsersMap.get(chatId).add(userId);
-        }
+        // Save to database and get the generated chatId
+        long chatId = com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils.saveChatAndReturnId(newChat, userIds); // <-- returns chatId
+        newChat.setId(chatId);
 
-        // Add the chat to the list of chats
-        chats.add(newChat);
-
-        // Save to database
-        com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils.saveChat(newChat, userIds);
-
-        // Send response
+        // Send response with chatId from DB
         out.write("start: RESPONSE_CREATE_CHAT\r\n");
         out.write("status: SUCCESS\r\n");
         out.write("chatId: " + chatId + "\r\n");
         out.write("end: RESPONSE_CREATE_CHAT\r\n");
         out.flush();
-
     }
 
     public static boolean handleGetChatsRequest(BufferedReader in, BufferedWriter out) throws IOException {

@@ -151,11 +151,14 @@ public class HomepageController {
             }
             // Send chat creation request to server
             new Thread(() -> {
-                ChatService.createChatGroup(userIds, chatNameStr);
+                int chatId = ChatService.createChatGroup(userIds, chatNameStr);
                 javafx.application.Platform.runLater(() -> {
-                    // TODO: get the chat ID from the server response
-                    int chatId = 1;
-                    com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, chatNameStr, loggedInUser, chatId);
+                    if (chatId > 0) {
+                        com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, chatNameStr, loggedInUser, chatId);
+                    } else {
+                        Stage stage = (Stage) chatListView.getScene().getWindow();
+                        Toast.show(stage, "Failed to create chat", 4000);
+                    }
                 });
             }).start();
         } else {
