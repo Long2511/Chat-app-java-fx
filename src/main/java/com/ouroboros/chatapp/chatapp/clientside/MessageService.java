@@ -132,6 +132,7 @@ public class MessageService {
                     if (!encryptedMessage.isFile()) {
                         String decryptedContent = EncryptionUtil.decrypt(encryptedMessage.getContent(), encryptedMessage.getChatId());
                         encryptedMessage.setContent(decryptedContent);
+                        System.out.println("Message " + i + ": " + decryptedContent);
                     }
                     messages.add(encryptedMessage);
                 }
