@@ -30,7 +30,7 @@ public class MessageHandler {
 
             int maxId = 0;
             while (rs.next()) {
-                // TODO: add more attributes
+                // TODO: add more attributes if needed
                 Message msg = new Message();
                 int id = rs.getInt("id");
                 msg.setId(rs.getInt("id"));
@@ -105,16 +105,15 @@ public class MessageHandler {
 
                 /// Handle realtime update message
                 // sent notify to other clients in the chat
-                if (chatUsersMap.get(chatId) != null) {
-                    for (int userIdInChat : chatUsersMap.get(chatId)) {
-                        if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
-                            for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
-                                userOut.write("start: ADD_NEW_MESSAGE\r\n");
-                                userOut.write("length: 1\r\n");
-                                newMsg.sendObject(userOut);
-                                userOut.write("end: ADD_NEW_MESSAGE\r\n");
-                                userOut.flush();
-                            }
+                List<Integer> userIdsInChat = DatabaseUtils.getUserIdsInChat(chatId);
+                for (int userIdInChat : userIdsInChat) {
+                    if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
+                        for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
+                            userOut.write("start: ADD_NEW_MESSAGE\r\n");
+                            userOut.write("length: 1\r\n");
+                            newMsg.sendObject(userOut);
+                            userOut.write("end: ADD_NEW_MESSAGE\r\n");
+                            userOut.flush();
                         }
                     }
                 }
@@ -122,6 +121,8 @@ public class MessageHandler {
                 logger.info("Sent new message with ID: " + newMsg.getId() + " for chat ID: " + chatId);
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error sending new message for chat ID: " + chatId, e);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         }
     }
