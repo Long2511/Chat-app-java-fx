@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChatHandler {
     public static final List<Chat> chats = Collections.synchronizedList(new ArrayList<>());
+    // TODO: chatUsersMap should be replaced with a database solution for scalability
     public static final Map<Integer, List<Integer>> chatUsersMap = Collections.synchronizedMap(new java.util.HashMap<>());
     public static AtomicInteger chatIdCounter = new AtomicInteger(1);
 
@@ -51,6 +52,7 @@ public class ChatHandler {
             return;
         }
 
+
         // Create a new chat
         Chat newChat = new Chat();
         newChat.setName(chatName);
@@ -67,12 +69,12 @@ public class ChatHandler {
         chats.add(newChat);
 
         // Send response
+
         out.write("start: RESPONSE_CREATE_CHAT\r\n");
         out.write("status: SUCCESS\r\n");
         out.write("chatId: " + newChatId + "\r\n");
         out.write("end: RESPONSE_CREATE_CHAT\r\n");
         out.flush();
-
     }
 
     public static boolean handleGetChatsRequest(BufferedReader in, BufferedWriter out) throws IOException {

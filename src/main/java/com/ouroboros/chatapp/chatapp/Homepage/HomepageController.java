@@ -1,5 +1,6 @@
 package com.ouroboros.chatapp.chatapp.Homepage;
 
+import com.ouroboros.chatapp.chatapp.ChatViewController;
 import com.ouroboros.chatapp.chatapp.MessagesViewController;
 import com.ouroboros.chatapp.chatapp.clientside.ChatService;
 import com.ouroboros.chatapp.chatapp.clientside.Toast;
@@ -232,8 +233,13 @@ private void handleChatSelection(MouseEvent event) {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-iew.fxml"));
                 AnchorPane chatView = loader.load();
-                MessagesViewController controller = loader.getController();
-                controller.setChatAndSender(selectedChat.getChatId(), (int) loggedInUser.getId());
+
+
+                //set the chat ID and sender ID in the controller
+                ChatViewController controller = loader.getController();
+                controller.setChatAndUser(selectedChat.getChatId(), (int) loggedInUser.getId());
+
+
                 chatViewPane.getChildren().setAll(chatView);
             } catch (IOException e) {
                 e.printStackTrace();

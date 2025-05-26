@@ -156,6 +156,7 @@ public class ChatService {
         }
         return null;
     }
+    
 
     public synchronized static Chat createChat(List<Integer> userIds, String chatNameStr) {
     try {
@@ -180,6 +181,33 @@ public class ChatService {
             if (line.startsWith("chatId: ")) {
                 chatId = Integer.parseInt(line.substring("chatId: ".length()));
             }
+
+    /**
+     * Create a chat group and return the new chat's ID (or -1 on failure)
+     */
+    /*public synchronized static int createChatGroup(List<Integer> userIds, String chatName) {
+        try {
+            out.write("start: CREATE_CHAT\r\n");
+            out.write("chatName: " + chatName + "\r\n");
+            out.write("users: " + userIds.size() + "\r\n");
+            for (Integer userId : userIds) {
+                out.write("userId: " + userId + "\r\n");
+            }
+            out.write("end: CREATE_CHAT\r\n");
+            out.flush();
+            String line;
+            int chatId = -1;
+            while (!(line = in.readLine()).equals("end: RESPONSE_CREATE_CHAT")) {
+                if (line.startsWith("chatId: ")) {
+                    chatId = Integer.parseInt(line.substring("chatId: ".length()));
+                }
+            }
+            return chatId;
+        } catch (IOException e) {
+            System.err.println("Error creating chat group: " + e.getMessage());
+            return -1;
+            */
+
         }
 
         return new Chat(chatId, chatName, null);

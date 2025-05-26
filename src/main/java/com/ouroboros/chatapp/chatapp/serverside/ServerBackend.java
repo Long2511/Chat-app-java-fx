@@ -1,5 +1,6 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
+
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
 public class ServerBackend {
     private static final int PORT = 8080;
 
-    public static Map<BufferedWriter, Long> clientWriters = Collections.synchronizedMap(new HashMap<>());
+    public static Map<Long, List<BufferedWriter>> clientWriters = Collections.synchronizedMap(new HashMap<>());
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(PORT);
@@ -33,6 +34,9 @@ public class ServerBackend {
             logger.log(Level.SEVERE, "Database connection failed", e);
             System.exit(1);
         }
+
+        // Fetch initial data from the database
+        MessageHandler.fetchDataFromDatabase();
 
         while (true) {
             Socket clientSocket = serverSocket.accept();
@@ -104,7 +108,8 @@ public class ServerBackend {
                     }
                     if (user != null) {
                         clientUserId = user.getId(); // Set the client user ID
-                        clientWriters.put(out, clientUserId); // Store the writer with user ID
+                        // Add the writer to the map with user ID as key
+                        clientWriters.computeIfAbsent((long) clientUserId, k -> new ArrayList<>()).add(out);
 
                         System.out.println("Login successful for: " + email);
                         out.write("start: AUTH_RESPONSE\r\n");
@@ -159,10 +164,23 @@ public class ServerBackend {
                     while (!(line = in.readLine()).equals("end: LOGOUT")) {
                         // No parameters needed for logout
                     }
-                    clientWriters.remove(out, clientUserId); // Remove the writer from the map
+
+                    removeClientWriter(clientUserId, out);
                     clientUserId = -1;
 
                     System.out.println("Logout request");
+                } else if (line.equals("start: FORGOT_PASSWORD")) {
+                    String email = null;
+                    String newPassword = null;
+                    while (!(line = in.readLine()).equals("end: FORGOT_PASSWORD")) {
+                        if (line.startsWith("email: ")) {
+                            email = line.substring("email: ".length());
+                        } else if (line.startsWith("newPassword: ")) {
+                            newPassword = line.substring("newPassword: ".length());
+                        }
+                    }
+                    PrintWriter pw = new PrintWriter(out, true);
+                    com.ouroboros.chatapp.chatapp.serverside.UserHandler.handleForgotPassword(email, newPassword, pw);
                 } else if (ChatHandler.isCreateChatRequest(line)) {
                     ChatHandler.handleCreateChatRequest(in, out);
                 } else if (ChatHandler.isGetChatsRequest(line)) {
@@ -171,7 +189,10 @@ public class ServerBackend {
                     while (!(line = in.readLine()).equals("end: DELETE_ACCOUNT")) {
                         if (line.startsWith("userId: ")) {
                             int userId = Integer.parseInt(line.substring("userId: ".length()));
-                            clientWriters.remove(out, (long) userId);
+
+                            removeClientWriter(userId, out);
+                            clientUserId = -1;
+
                             UserHandler.deleteAccount(userId);
                         }
                     }
@@ -192,6 +213,7 @@ public class ServerBackend {
 
     private static void handleSendMessage(BufferedReader in, BufferedWriter out) {
         Logger logger = Logger.getLogger(ServerBackend.class.getName());
+
         try {
             int chatId = -1;
             int senderId = -1;
@@ -204,32 +226,35 @@ public class ServerBackend {
                     chatId = Integer.parseInt(line.substring("chatId: ".length()));
                 } else if (line.startsWith("senderId: ")) {
                     senderId = Integer.parseInt(line.substring("senderId: ".length()));
+                } else if (line.startsWith("messageType: ")) {
+                    type = line.substring("messageType: ".length()).toUpperCase();
                 } else if (line.startsWith("content: ")) {
                     content = line.substring("content: ".length());
                 }
             }
+            System.out.println("senderId: " + senderId);
+            System.out.println("chatId: " + chatId);
+            System.out.println("content: " + content);
 
             if (chatId != -1 && senderId != -1 && content != null) {
-                Message message = new Message();
-                message.setChatId(chatId);
-                message.setSenderId(senderId);
-                message.setContent(content);
-                message.setMessageType(type);
-                java.time.LocalDateTime now = java.time.LocalDateTime.now();
-                message.setCreatedAt(now);
-                message.setUpdatedAt(now);
-                System.out.println("handleSendMessage received: " + message);
-
-                // Save message to the database
-                MessageHandler.saveMessageToDatabase(message);
-                System.out.println("handleSendMessage saved to database: " + message);
-
-
                 // Handle sending the message
-                MessageHandler.handleSendMessage(chatId, senderId, content, out);
+                MessageHandler.handleSendMessage(chatId, senderId, content, type, out);
             }
+
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error handling SEND_MESSAGE", e);
         }
     }
+
+    private static void removeClientWriter(long userId, BufferedWriter writer) {
+        List<BufferedWriter> writers = clientWriters.get(userId);
+        if (writers != null) {
+            writers.remove(writer);
+            if (writers.isEmpty()) {
+                clientWriters.remove(userId);
+            }
+        }
+    }
 }
+
+

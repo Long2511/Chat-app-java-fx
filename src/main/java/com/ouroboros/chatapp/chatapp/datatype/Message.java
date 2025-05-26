@@ -15,6 +15,8 @@ public class Message {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public static final String TYPE_FILE  = "FILE";
+
     // Getters
     public int getId() {
         return id;
@@ -113,5 +115,9 @@ public class Message {
         System.out.println("Message Type: " + messageType);
         System.out.println("Created At: " + createdAt);
         System.out.println("Updated At: " + updatedAt);
+    }
+
+    public boolean isFile() {
+        return TYPE_FILE.equalsIgnoreCase(this.messageType);
     }
 }
