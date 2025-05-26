@@ -120,6 +120,9 @@ public class MessagesViewController implements Initializable {
                 } catch (IOException e) {
                     System.err.println("Error loading initial messages: " + e.getMessage());
                     e.printStackTrace();
+                } catch (Exception e) {
+                    System.err.println("Unexpected error loading initial messages: " + e.getMessage());
+                    e.printStackTrace();
                 } finally {
                     // Signal that initial load is complete
                     initialLoadLatch.countDown();
@@ -253,6 +256,9 @@ public class MessagesViewController implements Initializable {
                     });
                 } catch (IOException e) {
                     System.err.println("Error sending message: " + e.getMessage());
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    System.err.println("Unexpected error sending message: " + e.getMessage());
                     e.printStackTrace();
                 }
             });

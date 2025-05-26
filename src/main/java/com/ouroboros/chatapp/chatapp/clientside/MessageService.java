@@ -2,6 +2,7 @@ package com.ouroboros.chatapp.chatapp.clientside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
+import com.ouroboros.chatapp.chatapp.serverside.EncryptionUtil;
 
 import java.io.*;
 import java.net.Socket;
@@ -40,7 +41,7 @@ public class MessageService {
      * @param chatId the chat ID to get messages for
      * @throws IOException if communication fails
      */
-    public synchronized void requestMessages(int chatId) throws IOException {
+    public synchronized void requestMessages(int chatId) throws Exception {
         out.write("start: GET_MESSAGES\r\n");
         out.write("chatId: " + chatId + "\r\n");
         out.write("end: GET_MESSAGES\r\n");
@@ -57,11 +58,13 @@ public class MessageService {
      * @param content  the message content
      * @throws IOException if communication fails
      */
-    public synchronized void sendMessage(int chatId, int senderId, String content) throws IOException {
+    public synchronized void sendMessage(int chatId, int senderId, String content) throws Exception {
+        // Encrypt the content before sending
+        String encryptedContent = EncryptionUtil.encrypt(content, chatId);
         out.write("start: SEND_MESSAGE\r\n");
         out.write("chatId: " + chatId + "\r\n");
         out.write("senderId: " + senderId + "\r\n");
-        out.write("content: " + content + "\r\n");
+        out.write("content: " + encryptedContent + "\r\n");
         out.write("end: SEND_MESSAGE\r\n");
         out.flush();
 
@@ -69,7 +72,7 @@ public class MessageService {
     }
 
     // Send icon and file
-    public synchronized void sendMessage(Message m) throws IOException {
+    public synchronized void sendMessage(Message m) throws Exception {
         out.write("start: SEND_MESSAGE\r\n");
         out.write("chatId: "      + m.getChatId()      + "\r\n");
         out.write("senderId: "    + m.getSenderId()    + "\r\n");
@@ -86,14 +89,21 @@ public class MessageService {
      *
      * @throws IOException if communication fails
      */
-    private void receiveMessages() throws IOException {
+    private void receiveMessages() throws Exception {
         String line;
         messages.clear();
         while (!(line = in.readLine()).equals("end: RESPONSE_MESSAGES")) {
             if (line.startsWith("length: ")) {
                 int length = Integer.parseInt(line.substring("length: ".length()));
                 for (int i = 0; i < length; i++) {
-                    messages.add(Message.receiveObject(in));
+                    // decrypt the message content
+                    //Message message = Message.receiveObject(in);
+                    Message encryptedMessage = Message.receiveObject(in);
+
+                    // Decrypt the message content
+                    String decryptedContent = EncryptionUtil.decrypt(encryptedMessage.getContent(), encryptedMessage.getChatId());
+                    encryptedMessage.setContent(decryptedContent);
+                    messages.add(encryptedMessage);
                 }
             }
         }
@@ -104,13 +114,20 @@ public class MessageService {
      *
      * @throws IOException if communication fails
      */
-    public void receiveNewMessage() throws IOException {
+    public void receiveNewMessage() throws Exception {
         String line;
         while (!(line = in.readLine()).equals("end: ADD_NEW_MESSAGE")) {
             if (line.startsWith("length: ")) {
                 int length = Integer.parseInt(line.substring("length: ".length()));
                 for (int i = 0; i < length; i++) {
-                    messages.add(Message.receiveObject(in));
+                    Message encryptedMessage = Message.receiveObject(in);
+
+                    // Decrypt the message content
+                    String decryptedContent = EncryptionUtil.decrypt(encryptedMessage.getContent(), encryptedMessage.getChatId());
+                    encryptedMessage.setContent(decryptedContent);
+
+                    messages.add(encryptedMessage);
+                    //messages.add(Message.receiveObject(in));
                 }
             }
         }
