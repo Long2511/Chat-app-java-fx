@@ -3,6 +3,8 @@ package com.ouroboros.chatapp.chatapp.datatype;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
+
 
 public class Message {
     private int id;
@@ -10,8 +12,8 @@ public class Message {
     private int chatId;
     private String content;
     private String messageType;
-    private String createdAt;
-    private String updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     // Getters
     public int getId() {
@@ -34,11 +36,11 @@ public class Message {
         return messageType;
     }
 
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public String getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
@@ -61,10 +63,10 @@ public class Message {
     public void setMessageType(String messageType) {
         this.messageType = messageType;
     }
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -95,9 +97,9 @@ public class Message {
             } else if (line.startsWith("messageType: ")) {
                 message.messageType = line.substring("messageType: ".length());
             } else if (line.startsWith("createdAt: ")) {
-                message.createdAt = line.substring("createdAt: ".length());
+                message.createdAt = LocalDateTime.parse(line.substring("createdAt: ".length()));
             } else if (line.startsWith("updatedAt: ")) {
-                message.updatedAt = line.substring("updatedAt: ".length());
+                message.updatedAt = LocalDateTime.parse(line.substring("updatedAt: ".length()));
             }
         }
         return message;

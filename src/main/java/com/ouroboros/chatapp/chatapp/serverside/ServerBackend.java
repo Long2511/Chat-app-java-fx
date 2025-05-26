@@ -1,27 +1,27 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
-import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
-import com.ouroboros.chatapp.chatapp.serverside.UserHandler;
+import com.ouroboros.chatapp.chatapp.serverside.MessageHandler;
+import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
+
 
 import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.logging.Logger;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 public class ServerBackend {
     private static final int PORT = 8080;
-
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(PORT);
         Logger logger = Logger.getLogger(ServerBackend.class.getName());
         System.out.println("Chat backend server started on port " + PORT);
 
-        // Initialize database connection
         try {
             DatabaseUtils.getConnection();
             System.out.println("Successfully connected to database");
@@ -30,9 +30,6 @@ public class ServerBackend {
             logger.log(Level.SEVERE, "Database connection failed", e);
             System.exit(1);
         }
-
-        // Fetch message data from database
-//        MessagesApiHandler.fetchDataFromDatabase();
 
         while (true) {
             Socket clientSocket = serverSocket.accept();
@@ -46,9 +43,8 @@ public class ServerBackend {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
 
-            String line;
-
             // Look for the start marker and determine the object type
+            String line;
             while (true) {
                 line = in.readLine();
                 if (line.equals("start: SEARCH_USERS_BY_NAME")) {
@@ -83,27 +79,7 @@ public class ServerBackend {
                         MessageHandler.handleRequestMessages(chatId, out);
                     }
                 } else if (line.equals("start: SEND_MESSAGE")) {
-                    int chatId = -1;
-                    int senderId = -1;
-                    String content = null;
-
-                    while (!(line = in.readLine()).equals("end: SEND_MESSAGE")) {
-                        if (line.startsWith("chatId: ")) {
-                            chatId = Integer.parseInt(line.substring("chatId: ".length()));
-                        } else if (line.startsWith("senderId: ")) {
-                            senderId = Integer.parseInt(line.substring("senderId: ".length()));
-                        } else if (line.startsWith("content: ")) {
-                            content = line.substring("content: ".length());
-                        }
-                    }
-
-                    System.out.println("Chat ID: " + chatId);
-                    System.out.println("Sender ID: " + senderId);
-                    System.out.println("Content: " + content);
-
-                    if (chatId != -1 && senderId != -1 && content != null) {
-                        MessageHandler.handleSendMessage(chatId, senderId, content, out);
-                    }
+                    handleSendMessage(in, out);
                 } else if (line.equals("start: LOGIN")) {
                     String email = null;
                     String password = null;
@@ -182,16 +158,6 @@ public class ServerBackend {
                     ChatHandler.handleCreateChatRequest(in, out);
                 } else if (ChatHandler.isGetChatsRequest(line)) {
                     ChatHandler.handleGetChatsRequest(in, out);
-                } else if (line.equals("start: DELETE_ACCOUNT")) {
-                    int userId = -1;
-                    while (!(line = in.readLine()).equals("end: DELETE_ACCOUNT")) {
-                        if (line.startsWith("userId: ")) {
-                            userId = Integer.parseInt(line.substring("userId: ".length()));
-                            UserHandler.deleteAccount(userId);
-                        }
-                    }
-                } else {
-                    System.out.println("[SERVER DEBUG] Unknown request type: " + line);
                 }
             }
 
@@ -201,7 +167,51 @@ public class ServerBackend {
             try {
                 clientSocket.close();
                 System.out.println("Client disconnected");
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
+    private static void handleSendMessage(BufferedReader in, BufferedWriter out) {
+        Logger logger = Logger.getLogger(ServerBackend.class.getName());
+        try {
+            int chatId = -1;
+            int senderId = -1;
+            String content = null;
+            String type = "TEXT"; // Default message type
+
+            String line;
+            while (!(line = in.readLine()).equals("end: SEND_MESSAGE")) {
+                if (line.startsWith("chatId: ")) {
+                    chatId = Integer.parseInt(line.substring("chatId: ".length()));
+                } else if (line.startsWith("senderId: ")) {
+                    senderId = Integer.parseInt(line.substring("senderId: ".length()));
+                } else if (line.startsWith("content: ")) {
+                    content = line.substring("content: ".length());
+                }
+            }
+
+            if (chatId != -1 && senderId != -1 && content != null) {
+                Message message = new Message();
+                message.setChatId(chatId);
+                message.setSenderId(senderId);
+                message.setContent(content);
+                message.setMessageType(type);
+                java.time.LocalDateTime now = java.time.LocalDateTime.now();
+                message.setCreatedAt(now);
+                message.setUpdatedAt(now);
+                System.out.println("handleSendMessage received: " + message);
+
+                // Save message to the database
+                MessageHandler.saveMessageToDatabase(message);
+                System.out.println("handleSendMessage saved to database: " + message);
+
+
+                // Handle sending the message
+                MessageHandler.handleSendMessage(chatId, senderId, content, out);
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error handling SEND_MESSAGE", e);
         }
     }
 }
