@@ -66,18 +66,17 @@ public class ChatViewController {
         messageArea.setPrefRowCount(1);
         messageArea.setMaxWidth(400);
         
-        // Style the message based on sender
-        if (isFromCurrentUser) {
-            messageArea.setStyle("-fx-background-color: #007AFF; -fx-text-fill: white; -fx-background-radius: 10;");
-        } else {
-            messageArea.setStyle("-fx-background-color: #E5E5EA; -fx-text-fill: black; -fx-background-radius: 10;");
-        }
+        // Add CSS classes
+        messageArea.getStyleClass().add("message-area");
+        messageArea.getStyleClass().add(isFromCurrentUser ? "current-user-message" : "other-user-message");
 
         HBox messageBox = new HBox(messageArea);
+        messageBox.getStyleClass().add("message-box");
         messageBox.setAlignment(isFromCurrentUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
         messageBox.setMaxWidth(messageScroll.getWidth());
         
         messageContainer.getChildren().add(messageBox);
+        messageContainer.getStyleClass().add("message-container");
         
         // Scroll to bottom
         messageScroll.setVvalue(1.0);

@@ -12,7 +12,7 @@
 
 <!-- Chat view layout -->
 
-<AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.ChatViewController">
+<AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.6" stylesheets="@./css/chatView.css" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.ChatViewController">
 
     <!-- ===== Top Bar: user being chatted with ===== -->
     <children>

@@ -11,3 +11,39 @@
 .send-button:pressed {
     -fx-background-color: #7b97b2;
 }
+
+/* Message styles */
+.message-area {
+    -fx-text-fill: black;
+    -fx-font-size: 12px;
+    -fx-background-color: #5ca2ed;
+    -fx-font-family: "System";
+}
+
+/* Current user's message */
+.current-user-message {
+    -fx-background-color: #5ca2ed;
+    -fx-text-fill: black;
+    -fx-background-radius: 10;
+    -fx-padding: 2px;
+}
+
+/* Other user's message */
+.other-user-message {
+    -fx-background-color: black;
+    -fx-text-fill: black;
+    -fx-background-radius: 10;
+    -fx-padding: 2px;
+}
+
+/* Message container */
+.message-container {
+    -fx-spacing: 10;
+    -fx-padding: 10;
+}
+
+/* Message box */
+.message-box {
+    -fx-padding: 5;
+    -fx-spacing: 5;
+}
