@@ -9,16 +9,18 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+import com.ouroboros.chatapp.chatapp.clientside.Toast;
+
 public class ChatView extends Application {
 
     // For demo purposes
     @Override
     public void start(Stage primaryStage) throws Exception {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
             Parent root = loader.load();
 
-            MessagesViewController controller = loader.getController();
+            ChatViewController controller = loader.getController();
 
             primaryStage.setTitle("Chat Demo");
             primaryStage.setScene(new Scene(root, 640, 640));
@@ -33,6 +35,20 @@ public class ChatView extends Application {
             System.err.println("Error loading FXML file: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public static void openChatView(javafx.scene.Node anyNode, String chatNameStr) {
+        try {
+            FXMLLoader loader = new FXMLLoader(ChatView.class.getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
+            Parent chatView = loader.load();
+            ChatViewController controller = loader.getController();
+            controller.setChatTitle(chatNameStr);
+            // Switch the whole scene
+            Stage stage = (Stage) anyNode.getScene().getWindow();
+            stage.setScene(new Scene(chatView));
+        } catch (IOException e) {
+            e.printStackTrace();
+            }
     }
 
     public static void main(String[] args) {

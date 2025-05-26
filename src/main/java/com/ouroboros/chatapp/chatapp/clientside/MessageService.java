@@ -5,9 +5,7 @@ import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
 
 import java.io.*;
 import java.net.Socket;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,6 +62,19 @@ public class MessageService {
         out.write("chatId: " + chatId + "\r\n");
         out.write("senderId: " + senderId + "\r\n");
         out.write("content: " + content + "\r\n");
+        out.write("end: SEND_MESSAGE\r\n");
+        out.flush();
+
+        receiveNewMessage();
+    }
+
+    // Send icon and file
+    public synchronized void sendMessage(Message m) throws IOException {
+        out.write("start: SEND_MESSAGE\r\n");
+        out.write("chatId: "      + m.getChatId()      + "\r\n");
+        out.write("senderId: "    + m.getSenderId()    + "\r\n");
+        out.write("messageType: " + m.getMessageType() + "\r\n");
+        out.write("content: "     + m.getContent()     + "\r\n");
         out.write("end: SEND_MESSAGE\r\n");
         out.flush();
 

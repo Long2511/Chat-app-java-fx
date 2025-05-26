@@ -24,7 +24,7 @@ public class ChatHandler {
         return method.equals("start: GET_ALL_CHATS");
     }
 
-    public static boolean handleCreateChatRequest(BufferedReader in, BufferedWriter out) throws IOException {
+    public static void handleCreateChatRequest(BufferedReader in, BufferedWriter out) throws IOException {
         String chatName = null;
         List<Integer> userIds = new ArrayList<>();
         int userCount = 0;
@@ -47,7 +47,7 @@ public class ChatHandler {
             out.write("message: Invalid chat creation request\r\n");
             out.write("end: RESPONSE_CREATE_CHAT\r\n");
             out.flush();
-            return false;
+            return;
         }
 
         // Create a new chat
@@ -55,7 +55,7 @@ public class ChatHandler {
         Chat newChat = new Chat();
         newChat.setId(chatId);
         newChat.setName(chatName);
-        newChat.setType(userIds.size() > 2 ? "GROUP" : "PRIVATE");
+        newChat.setType(userIds.size() > 1 ? "group" : "direct");
 
         if (!chatUsersMap.containsKey(chatId)) {
             chatUsersMap.put(chatId, new ArrayList<>());
@@ -67,8 +67,8 @@ public class ChatHandler {
         // Add the chat to the list of chats
         chats.add(newChat);
 
-        // TODO: Save to database if needed
-        // DatabaseUtils.saveChat(newChat, userIds);
+        // Save to database
+        com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils.saveChat(newChat, userIds);
 
         // Send response
         out.write("start: RESPONSE_CREATE_CHAT\r\n");
@@ -77,34 +77,62 @@ public class ChatHandler {
         out.write("end: RESPONSE_CREATE_CHAT\r\n");
         out.flush();
 
-        return true;
     }
 
     public static boolean handleGetChatsRequest(BufferedReader in, BufferedWriter out) throws IOException {
-        int userId = -1;
-        String line;
-        while (!(line = in.readLine()).equals("end: GET_ALL_CHATS")) {
-            if (line.startsWith("userId: ")) {
-                userId = Integer.parseInt(line.substring("userId: ".length()));
-            }
+    int userId = -1;
+    String line;
+    while (!(line = in.readLine()).equals("end: GET_ALL_CHATS")) {
+         System.out.println("DEBUG: received line = " + line);//debug
+        if (line.startsWith("userId: ")) {
+            userId = Integer.parseInt(line.substring("userId: ".length()));
+            System.out.println("DEBUG: Received get chats request for userId: " + userId);
         }
-
-        List<Chat> resultChats = new ArrayList<>();
-
-        for (Chat chat : chats) {
-            if (chatUsersMap.containsKey(chat.getId()) && chatUsersMap.get(chat.getId()).contains(userId)) {
-                // If the user is part of the chat, we can send it
-                resultChats.add(chat);
-            }
-        }
-
-        out.write("start: RESPONSE_GET_ALL_CHATS\r\n");
-        out.write("length: " + resultChats.size() + "\r\n");
-        for (Chat chat : resultChats) {
-            chat.sendObject(out);
-        }
-        out.write("end: RESPONSE_GET_ALL_CHATS\r\n");
-        out.flush();
-        return true;
     }
+
+    /*List<Chat> resultChats = new ArrayList<>();
+    System.out.println("DEBUG: Total chats in system: " + chats.size());
+
+    for (Chat chat : chats) {
+        System.out.println("DEBUG: Checking chat ID: " + chat.getId());
+        if (chatUsersMap.containsKey(chat.getId())) {
+            System.out.println("DEBUG: Chat " + chat.getId() + " users: " + chatUsersMap.get(chat.getId()));
+            if (chatUsersMap.get(chat.getId()).contains(userId)) {
+                resultChats.add(chat);
+                System.out.println("DEBUG: Added chat " + chat.getId() + " to results - Name: " + chat.getName());
+            }
+        }
+    }*/
+
+    
+    // Load chats from database instead of memory
+    List<Chat> resultChats = DatabaseUtils.loadChatsForUser(userId);
+    System.out.println("DEBUG: Loaded " + resultChats.size() + " chats from database for user " + userId);
+
+    out.write("start: RESPONSE_GET_ALL_CHATS\r\n");
+    out.write("length: " + resultChats.size() + "\r\n");
+
+    System.out.println("DEBUG: Sending RESPONSE_GET_ALL_CHATS with " + resultChats.size() + " chats");
+    for (Chat chat : resultChats) {
+        chat.sendObject(out);
+        System.out.println("DEBUG: Sent chat: " + chat.getId() + " - " + chat.getName());
+    }
+    out.write("end: RESPONSE_GET_ALL_CHATS\r\n");
+    out.flush();
+    return true;
+    
+
+    /*System.out.println("DEBUG: Found " + resultChats.size() + " chats for user " + userId);
+    out.write("start: RESPONSE_GET_ALL_CHATS\r\n");
+    out.write("length: " + resultChats.size() + "\r\n");
+    System.out.println("Sending " + resultChats.size() + " chats to user " + userId);
+    for (Chat chat : resultChats) {
+        chat.sendObject(out);
+        System.out.println("DEBUG: Sent chat: " + chat.getId() + " - " + chat.getName());
+    }
+    out.write("end: RESPONSE_GET_ALL_CHATS\r\n");
+    out.flush();
+    return true;
+    */
+}
 }

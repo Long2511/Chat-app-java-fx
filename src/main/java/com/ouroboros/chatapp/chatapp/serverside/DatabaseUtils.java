@@ -8,10 +8,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.ouroboros.chatapp.chatapp.datatype.Chat;
 
 public class DatabaseUtils {
     private static final Map<String, String> ENV_VARS = new HashMap<>();
@@ -53,6 +60,38 @@ public class DatabaseUtils {
             e.printStackTrace();
         }
         return users;
+    }
+
+    public static void saveChat(com.ouroboros.chatapp.chatapp.datatype.Chat chat, List<Integer> userIds) {
+        String insertChatSql = "INSERT INTO chats (name, type, created_at, updated_at) VALUES (?, ?, ?, ?) RETURNING id";
+        String insertParticipantSql = "INSERT INTO chat_participants (chat_id, user_id) VALUES (?, ?)";
+        try (Connection conn = getConnection();
+             java.sql.PreparedStatement chatStmt = conn.prepareStatement(insertChatSql)) {
+            chatStmt.setString(1, chat.getName());
+            chatStmt.setString(2, chat.getType());
+            String createdAt = chat.getCreatedAt() != null ? chat.getCreatedAt() : java.time.LocalDateTime.now().toString();
+            String updatedAt = chat.getUpdatedAt() != null ? chat.getUpdatedAt() : createdAt;
+            chatStmt.setTimestamp(3, java.sql.Timestamp.valueOf(createdAt.replace("T", " ").substring(0, 19)));
+            chatStmt.setTimestamp(4, java.sql.Timestamp.valueOf(updatedAt.replace("T", " ").substring(0, 19)));
+            // Get generated chat id
+            try (java.sql.ResultSet rs = chatStmt.executeQuery()) {
+                if (rs.next()) {
+                    long chatId = rs.getLong(1);
+                    chat.setId(chatId); // update the Chat object with the real DB id
+                    // Create a new PreparedStatement for participants inside this block
+                    try (java.sql.PreparedStatement participantStmt = conn.prepareStatement(insertParticipantSql)) {
+                        for (Integer userId : userIds) {
+                            participantStmt.setLong(1, chatId);
+                            participantStmt.setInt(2, userId);
+                            participantStmt.addBatch();
+                        }
+                        participantStmt.executeBatch();
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void loadEnvVars() throws IOException {
@@ -103,4 +142,40 @@ public class DatabaseUtils {
             }
         }
     }
+    public static List<Chat> loadChatsForUser(int userId) {
+    List<Chat> userChats = new ArrayList<>();
+    try (Connection conn = getConnection()) {
+        // Query to get chats and their participants
+        String sql = """
+            SELECT c.id AS chat_id, c.name AS chat_name, c.type AS chat_type, cp.user_id 
+            FROM chats c
+            JOIN chat_participants cp ON c.id = cp.chat_id
+            WHERE cp.user_id = ?
+        """;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                   int chatId = rs.getInt("chat_id");
+                    String name = rs.getString("chat_name");
+                    String type = rs.getString("chat_type");
+                    System.out.println("DEBUG: DB row => id=" + chatId + ", name=" + name + ", type=" + type);
+
+                    Chat chat = new Chat();
+                    chat.setId(chatId);
+                    chat.setName(name);
+                    chat.setType(type);
+                    userChats.add(chat);
+                }
+                // Log for debugging
+                //System.out.println("DEBUG: Loaded chat from DB - ID: " + chat.getId() + 
+                                    // ", Name: " + chat.getName());
+                System.out.println("DEBUG: Total chats loaded from DB = " + userChats.size());
+                }
+            }
+        } catch (SQLException e) {
+        System.err.println("Error loading chats: " + e.getMessage());
+    }
+    return userChats;
+}
 }

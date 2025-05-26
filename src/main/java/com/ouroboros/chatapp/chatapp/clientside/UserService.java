@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserService {
-    private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 8080;
 
     private final BufferedReader in;
     private final BufferedWriter out;
@@ -81,6 +79,16 @@ public class UserService {
             }
         }
         return users;
+    }
+
+    public static void deleteAccount(long id) throws IOException {
+        BufferedWriter out = ClientConnection.getSharedWriter();
+        BufferedReader in = ClientConnection.getSharedReader();
+
+        out.write("start: DELETE_ACCOUNT\r\n");
+        out.write("userId: " + id + "\r\n");
+        out.write("end: DELETE_ACCOUNT\r\n");
+        out.flush();
     }
 
     /**

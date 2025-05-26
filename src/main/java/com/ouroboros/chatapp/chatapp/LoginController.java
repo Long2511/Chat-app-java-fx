@@ -1,14 +1,18 @@
 package com.ouroboros.chatapp.chatapp;
 
+import com.ouroboros.chatapp.chatapp.Homepage.HomepageController;
 import com.ouroboros.chatapp.chatapp.clientside.UserService;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
@@ -66,8 +70,17 @@ public class LoginController implements Initializable {
         loggedInUser = userService.login(email, password);
         if (loggedInUser != null) {
             welcomeLabel.setText("Login successful!");
+
             // Navigate to the homepage
-            SceneChanger.changeScene("View/Homepage.fxml");
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
+            Scene scene = new Scene(loader.load());
+
+            // Truyền user vào controller
+            HomepageController controller = loader.getController();
+            controller.setLoggedInUser(loggedInUser);
+
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            stage.setScene(scene);
         } else {
             welcomeLabel.setText("Invalid email or password.");
         }

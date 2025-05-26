@@ -1,15 +1,18 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.User;
-
+import java.io.PrintWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 
 public class UserHandler {
+    // TODO: Replace with actual database logic to fetch users
     public static void handleGetAllUsers(PrintWriter out) {
-        System.out.println("[DEBUG] UserHandler.handleGetAllUsers called");
         List<User> users = DatabaseUtils.searchUsersByName(""); // Empty string returns all users
         out.println("start: RESPONSE_USERS");
         out.println("length: " + users.size());
@@ -27,7 +30,6 @@ public class UserHandler {
     }
 
     public static void handleSearchUsersByName(String query, PrintWriter out) {
-        // Example: Use DatabaseUtils.searchUsersByName(query) to get users from DB
         List<User> users = DatabaseUtils.searchUsersByName(query); // Implement this in DatabaseUtils
         out.println("start: RESPONSE_USERS");
         out.println("length: " + users.size());
@@ -42,6 +44,16 @@ public class UserHandler {
         }
         out.println("end: RESPONSE_USERS");
         out.flush();
+    }
+
+    public static void deleteAccount(int userId) {
+        try (Connection conn = DatabaseUtils.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("DELETE FROM users WHERE id = ?")) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
     }
 }
 

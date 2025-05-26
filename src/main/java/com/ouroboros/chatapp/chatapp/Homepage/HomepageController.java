@@ -1,9 +1,12 @@
 package com.ouroboros.chatapp.chatapp.Homepage;
 
+import com.ouroboros.chatapp.chatapp.MessagesViewController;
 import com.ouroboros.chatapp.chatapp.clientside.ChatService;
+import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -11,6 +14,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.scene.Node;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,18 +35,34 @@ public class HomepageController {
     private AnchorPane chatViewPane;
     @FXML
     private ListView<User> userSearchList;
+
+    @FXML
+    private TextField chatName;
     private User loggedInUser;
 
     private final javafx.animation.PauseTransition searchDelay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(0.5));
     private String lastSearchText = "";
 
     public void initialize() {
-        chatListView.setCellFactory(listView -> new ChatListCell());
-        chatListView.setItems(FXCollections.observableArrayList(
-                new ChatPreview("Alice", "How are you?", "10:45 AM"),
-                new ChatPreview("Team Chat", "New file uploaded", "09:10 AM")
-        ));
+        chatListView.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(ChatPreview item, boolean empty) {
+                super.updateItem(item, empty);
+                setText((empty || item == null) ? null : item.getTitle());
+            }
+        });
+
+        
+        // load chat previews when the "Message" tab is selected
+        tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            if ("Your Chats".equals(newTab.getText()) && loggedInUser != null) {
+        loadChatPreviews();
+        }
+    });
+
+
         userSearchList.setItems(userSearchResults);
+        userSearchList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         userSearchList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
             @Override
             protected void updateItem(User user, boolean empty) {
@@ -61,6 +81,15 @@ public class HomepageController {
             searchDelay.setOnFinished(event -> filterUserSearchList(lastSearchText));
             searchDelay.playFromStart();
         });
+        // Hide chatName if only one user is selected, show if more than one
+        userSearchList.getSelectionModel().getSelectedItems().addListener((javafx.collections.ListChangeListener<User>) c -> {
+            if (userSearchList.getSelectionModel().getSelectedItems().size() > 1) {
+                chatName.setVisible(true);
+            } else {
+                chatName.setVisible(false);
+            }
+        });
+        chatName.setVisible(false); // Hide by default
     }
 
     private void loadAllUsersToSearchList() {
@@ -104,15 +133,32 @@ public class HomepageController {
     private void handleCreate() {
         var selectedUsers = userSearchList.getSelectionModel().getSelectedItems();
         if (!selectedUsers.isEmpty()) {
-            List<String> usernames = new ArrayList<>();
+            List<Integer> userIds = new ArrayList<>();
             for (User user : selectedUsers) {
-                usernames.add(user.getUsername());
+                userIds.add((int) user.getId());
             }
-            List<User> users = ChatService.searchUsers(usernames);
-            Chat newChat = ChatService.createChat(users, "New Chat");
-            System.out.println("Chat created: " + newChat);
+            final String chatNameStr;
+            if (selectedUsers.size() > 1) {
+                String tempName = chatName.getText();
+                if (tempName == null || tempName.trim().isEmpty()) {
+                    chatNameStr = "Group Chat";
+                } else {
+                    chatNameStr = tempName;
+                }
+            } else {
+                chatNameStr = selectedUsers.get(0).getUsername();
+            }
+            // Send chat creation request to server
+            new Thread(() -> {
+                ChatService.createChatGroup(userIds, chatNameStr);
+                javafx.application.Platform.runLater(() -> {
+                    com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, chatNameStr);
+                });
+            }).start();
         } else {
             System.out.println("No users selected.");
+            Stage stage = (Stage) chatListView.getScene().getWindow();
+            Toast.show(stage, "Please select at least a person to open chat", 4000);
         }
     }
 
@@ -130,13 +176,34 @@ public class HomepageController {
     }
 
     @FXML
+    private void loadChatPreviews() {
+    List<Chat> chats = ChatService.getAllChats((int) loggedInUser.getId());
+
+    List<ChatPreview> previews = chats.stream()
+        .map(chat -> {
+            String title = "GROUP".equals(chat.getType())
+                    ? chat.getName()
+                    : "Chat #" + chat.getId(); // sau này thay bằng tên người đối phương
+            return new ChatPreview((int) chat.getId(), title);
+        })
+        .toList();
+    System.out.println("Loaded chat previews: " + previews);
+    chatListView.setItems(FXCollections.observableArrayList(previews));
+}
+
+
+    @FXML
     private void handleChatSelection(MouseEvent event) {
         ChatPreview selectedChat = chatListView.getSelectionModel().getSelectedItem();
         if (selectedChat != null) {
-            System.out.println("Chat selected: " + selectedChat.getUsername());
+            System.out.println("Chat selected: " + selectedChat.getTitle());
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/chat-view.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
                 AnchorPane chatView = loader.load();
+                //set the chat ID and sender ID in the controller
+                MessagesViewController controller = loader.getController();
+                controller.setChatAndSender(selectedChat.getChatId(), (int) loggedInUser.getId());
+
                 chatViewPane.getChildren().setAll(chatView);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -145,15 +212,29 @@ public class HomepageController {
     }
 
     @FXML
+    public void handleDeleteAccount(ActionEvent actionEvent) {
+        try {
+            com.ouroboros.chatapp.chatapp.clientside.UserService.deleteAccount(loggedInUser.getId());
+            System.out.println("Account deleted successfully.");
+            handleLogout(); // Logout after deletion
+        } catch (Exception e) {
+            System.err.println("Error deleting account: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+
+   /*  @FXML
     private void handleTabChange() {
         Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
         if ("Message".equals(selectedTab.getText())) {
             try {
-                AnchorPane chatView = FXMLLoader.load(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/chat-view.fxml"));
+                AnchorPane chatView = FXMLLoader.load(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
                 chatViewPane.getChildren().setAll(chatView);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 }
