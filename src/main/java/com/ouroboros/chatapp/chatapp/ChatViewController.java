@@ -70,6 +70,9 @@ public class ChatViewController {
     // Latch to ensure initial message load completes before starting the update thread
     private CountDownLatch initialLoadLatch;
 
+    // Flag to indicate if we're currently sending a message
+    private final AtomicBoolean isSendingMessage = new AtomicBoolean(false);
+
     @FXML
     public void initialize() {
         // Initialize any necessary setup
@@ -88,7 +91,7 @@ public class ChatViewController {
         messageContainer.sceneProperty().addListener((observable, oldScene, newScene) -> {
             if (newScene == null && oldScene != null) {
                 // Scene changed - stop update thread
-                stopMessageListener();
+                cleanup();
             }
         });
 
@@ -96,7 +99,7 @@ public class ChatViewController {
         Platform.runLater(() -> {
             if (messageContainer.getScene() != null) {
                 Stage stage = (Stage) messageContainer.getScene().getWindow();
-                stage.setOnCloseRequest(event -> stopMessageListener());
+                stage.setOnCloseRequest(event -> cleanup());
             }
         });
     }
@@ -158,36 +161,53 @@ public class ChatViewController {
                 initialLoadLatch.await();
 
                 System.out.println("Message listener thread started for chat ID: " + chatId);
-                Socket socket = ClientConnection.getSharedSocket();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                 while (isUpdateRunning.get() && !Thread.currentThread().isInterrupted()) {
                     try {
-                        // Check for new messages
-                        String line = reader.readLine();
+                        // Skip checking for messages if we're currently sending a message to avoid socket conflicts
+                        if (isSendingMessage.get()) {
+                            Thread.sleep(100);
+                            continue;
+                        }
 
-                        if (line != null && line.equals("start: ADD_NEW_MESSAGE")) {
-                            Message newMessage = null;
+                        // Check if there are any bytes available to read
+                        Socket socket = ClientConnection.getSharedSocket();
+                        if (socket.getInputStream().available() > 0) {
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                            // Process the message marker
-                            while (!(line = reader.readLine()).equals("end: ADD_NEW_MESSAGE")) {
-                                if (line.startsWith("length: ")) {
-                                    int length = Integer.parseInt(line.substring("length: ".length()));
-                                    for (int i = 0; i < length && i == 0; i++) {
-                                        newMessage = Message.receiveObject(reader);
-                                    }
-                                }
+                            // Try to read a line without blocking indefinitely
+                            String line = null;
+                            if (reader.ready()) {
+                                line = reader.readLine();
                             }
 
-                            // If the message is for our chat, display it
-                            if (newMessage != null && newMessage.getChatId() == chatId) {
-                                final Message displayMessage = newMessage;
-                                Platform.runLater(() -> {
-                                    boolean isFromCurrentUser = displayMessage.getSenderId() == currentUser.getId();
-                                    addMessage(displayMessage.getContent(), isFromCurrentUser);
-                                    // Scroll to bottom
-                                    messageScroll.setVvalue(1.0);
-                                });
+                            if (line != null && line.equals("start: ADD_NEW_MESSAGE")) {
+                                Message newMessage = null;
+
+                                System.out.println("Received new message marker for chat ID: " + chatId);
+
+                                // Process the message marker
+                                while (!(line = reader.readLine()).equals("end: ADD_NEW_MESSAGE")) {
+                                    if (line.startsWith("length: ")) {
+                                        int length = Integer.parseInt(line.substring("length: ".length()));
+                                        for (int i = 0; i < length && i == 0; i++) {
+                                            newMessage = Message.receiveObject(reader);
+                                        }
+                                    }
+                                }
+
+                                System.out.println("message content: " + (newMessage != null ? newMessage.getContent() : "null"));
+
+                                // If the message is for our chat, display it
+                                if (newMessage != null && newMessage.getChatId() == chatId) {
+                                    final Message displayMessage = newMessage;
+                                    Platform.runLater(() -> {
+                                        boolean isFromCurrentUser = displayMessage.getSenderId() == currentUser.getId();
+                                        addMessage(displayMessage.getContent(), isFromCurrentUser);
+                                        // Scroll to bottom
+                                        messageScroll.setVvalue(1.0);
+                                    });
+                                }
                             }
                         }
 
@@ -210,9 +230,6 @@ public class ChatViewController {
             } catch (InterruptedException e) {
                 // Thread was interrupted while waiting for the latch
                 System.out.println("Message listener thread interrupted while waiting for initial load");
-            } catch (IOException e) {
-                System.err.println("Socket error in message listener: " + e.getMessage());
-                e.printStackTrace();
             } finally {
                 System.out.println("Message listener thread stopped for chat ID: " + chatId);
             }
@@ -223,6 +240,7 @@ public class ChatViewController {
     }
 
     private void stopMessageListener() {
+        // Set the flag to stop the thread
         isUpdateRunning.set(false);
 
         if (messageListenerThread != null && messageListenerThread.isAlive()) {
@@ -231,6 +249,11 @@ public class ChatViewController {
             try {
                 // Wait briefly for thread to terminate
                 messageListenerThread.join(500);
+
+                // If thread is still alive after timeout, log a warning
+                if (messageListenerThread.isAlive()) {
+                    System.err.println("Warning: Message listener thread did not terminate within timeout");
+                }
             } catch (InterruptedException e) {
                 System.err.println("Interrupted while waiting for message listener thread to stop");
             }
@@ -243,15 +266,27 @@ public class ChatViewController {
     @FXML
     private void handleSendMessage() {
         String message = messageInput.getText().trim();
-        if (!message.isEmpty()) {
+        if (!message.isEmpty() && !isSendingMessage.get()) {
             // Clear the message field immediately for better user experience
             String messageToBeSent = message;
             messageInput.clear();
 
-            // Send message in a background thread
+            // Mark that we're sending a message to avoid socket conflicts
+            isSendingMessage.set(true);
+
+            // Send message in a background thread with CompletableFuture instead of raw Thread
             CompletableFuture.runAsync(() -> {
                 try {
+                    System.out.println("Sending message: " + messageToBeSent);
                     messageService.sendMessage(chatId, (int) currentUser.getId(), messageToBeSent);
+
+                    // Update UI with the sent message - we don't need to wait for server confirmation
+                    Platform.runLater(() -> {
+                        addMessage(messageToBeSent, true);
+                        messageScroll.setVvalue(1.0);
+                    });
+
+                    System.out.println("Message sent successfully");
                 } catch (IOException e) {
                     Platform.runLater(() -> {
                         Stage stage = (Stage) messageContainer.getScene().getWindow();
@@ -259,6 +294,9 @@ public class ChatViewController {
                     });
                     System.err.println("Error sending message: " + e.getMessage());
                     e.printStackTrace();
+                } finally {
+                    // Reset the sending flag regardless of success/failure
+                    isSendingMessage.set(false);
                 }
             });
         }
@@ -307,8 +345,8 @@ public class ChatViewController {
 
     @FXML
     private void handleBackButton() {
-        // Stop message listener thread before going back
-        stopMessageListener();
+        // Do proper cleanup before navigating back
+        cleanup();
 
         try {
             SceneChanger.changeScene("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml");
@@ -322,6 +360,26 @@ public class ChatViewController {
      * Public cleanup method to be called when view is closed
      */
     public void cleanup() {
+        System.out.println("Performing complete cleanup for ChatViewController");
+
+        // Stop the message listener thread first
         stopMessageListener();
+
+        // Wait until any ongoing message sending completes
+        long startTime = System.currentTimeMillis();
+        while (isSendingMessage.get() && System.currentTimeMillis() - startTime < 2000) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+
+        // Reset state variables
+        messageListenerThread = null;
+        isUpdateRunning.set(false);
+        isSendingMessage.set(false);
+
+        System.out.println("ChatViewController cleanup complete");
     }
 }

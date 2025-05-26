@@ -104,7 +104,7 @@ public class MessageService {
      *
      * @throws IOException if communication fails
      */
-    private void receiveNewMessage() throws IOException {
+    public void receiveNewMessage() throws IOException {
         String line;
         while (!(line = in.readLine()).equals("end: ADD_NEW_MESSAGE")) {
             if (line.startsWith("length: ")) {
@@ -114,6 +114,36 @@ public class MessageService {
                 }
             }
         }
+    }
+
+    /**
+     * Checks if there's a new message marker in the input stream without blocking
+     * @return The line containing the marker, or null if no data is available
+     */
+    public synchronized String checkForNewMessageMarker() {
+        try {
+            // Check if there's data available to read without blocking
+            if (ClientConnection.getSharedSocket().getInputStream().available() > 0) {
+                // Mark the current position in case we need to reset
+                in.mark(1024);
+
+                // Try to read a line
+                String line = in.readLine();
+
+                if (line != null && line.equals("start: ADD_NEW_MESSAGE")) {
+                    // Found the marker
+                    return line;
+                } else {
+                    // Not what we're looking for, reset the stream position
+                    in.reset();
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error checking for new message marker: " + e.getMessage());
+        }
+
+        // No marker found
+        return null;
     }
 
     /**
