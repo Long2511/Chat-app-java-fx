@@ -1,12 +1,10 @@
 package com.ouroboros.chatapp.chatapp.clientside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Message;
-import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
 import com.ouroboros.chatapp.chatapp.serverside.EncryptionUtil;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,17 +69,50 @@ public class MessageService {
         receiveNewMessage();
     }
 
-    // Send icon and file
+    // Send icon and file (and optionally text, but only encrypt text)
     public synchronized void sendMessage(Message m) throws Exception {
+        String contentToSend = m.getContent();
+        // Only encrypt if not a file message
+        if (!m.isFile()) {
+            contentToSend = EncryptionUtil.encrypt(contentToSend, m.getChatId());
+        }
         out.write("start: SEND_MESSAGE\r\n");
         out.write("chatId: "      + m.getChatId()      + "\r\n");
         out.write("senderId: "    + m.getSenderId()    + "\r\n");
         out.write("messageType: " + m.getMessageType() + "\r\n");
-        out.write("content: "     + m.getContent()     + "\r\n");
+        out.write("content: "     + contentToSend     + "\r\n");
         out.write("end: SEND_MESSAGE\r\n");
         out.flush();
 
         receiveNewMessage();
+    }
+
+    /**
+     * Dedicated method for sending file messages. Do not use sendMessage for files!
+     * This method assumes the file is already uploaded to the server (or local uploads/).
+     * The message content should be the file name, and fileUrl should be the path.
+     * Adds debug output for troubleshooting.
+     */
+    public synchronized void sendFile(Message m, File file) throws Exception {
+        System.out.println("[DEBUG] sendFile called");
+        System.out.println("[DEBUG] Message: chatId=" + m.getChatId() + ", senderId=" + m.getSenderId() + ", fileUrl=" + m.getFileUrl() + ", content=" + m.getContent() + ", type=" + m.getMessageType());
+        System.out.println("[DEBUG] File: " + (file != null ? file.getAbsolutePath() : "null"));
+        if (!m.isFile()) {
+            throw new IllegalArgumentException("sendFile can only be used for file messages (type FILE)");
+        }
+        // Optionally: upload file to server here if needed (currently assumed done in controller)
+        out.write("start: SEND_MESSAGE\r\n");
+        out.write("chatId: "      + m.getChatId()      + "\r\n");
+        out.write("senderId: "    + m.getSenderId()    + "\r\n");
+        out.write("messageType: " + m.getMessageType() + "\r\n");
+        out.write("content: "     + m.getContent()     + "\r\n"); // file name or description
+        out.write("fileUrl: "     + (m.getFileUrl() != null ? m.getFileUrl() : "") + "\r\n");
+        out.write("mediaUrl: "    + (m.getMediaUrl() != null ? m.getMediaUrl() : "") + "\r\n");
+        out.write("end: SEND_MESSAGE\r\n");
+        out.flush();
+        System.out.println("[DEBUG] sendFile message sent to server");
+        receiveNewMessage();
+        System.out.println("[DEBUG] sendFile receiveNewMessage completed");
     }
 
     /**
@@ -96,13 +127,12 @@ public class MessageService {
             if (line.startsWith("length: ")) {
                 int length = Integer.parseInt(line.substring("length: ".length()));
                 for (int i = 0; i < length; i++) {
-                    // decrypt the message content
-                    //Message message = Message.receiveObject(in);
                     Message encryptedMessage = Message.receiveObject(in);
-
-                    // Decrypt the message content
-                    String decryptedContent = EncryptionUtil.decrypt(encryptedMessage.getContent(), encryptedMessage.getChatId());
-                    encryptedMessage.setContent(decryptedContent);
+                    // Only decrypt if not a file message
+                    if (!encryptedMessage.isFile()) {
+                        String decryptedContent = EncryptionUtil.decrypt(encryptedMessage.getContent(), encryptedMessage.getChatId());
+                        encryptedMessage.setContent(decryptedContent);
+                    }
                     messages.add(encryptedMessage);
                 }
             }
@@ -121,13 +151,12 @@ public class MessageService {
                 int length = Integer.parseInt(line.substring("length: ".length()));
                 for (int i = 0; i < length; i++) {
                     Message encryptedMessage = Message.receiveObject(in);
-
-                    // Decrypt the message content
-                    String decryptedContent = EncryptionUtil.decrypt(encryptedMessage.getContent(), encryptedMessage.getChatId());
-                    encryptedMessage.setContent(decryptedContent);
-
+                    // Only decrypt if not a file message
+                    if (!encryptedMessage.isFile()) {
+                        String decryptedContent = EncryptionUtil.decrypt(encryptedMessage.getContent(), encryptedMessage.getChatId());
+                        encryptedMessage.setContent(decryptedContent);
+                    }
                     messages.add(encryptedMessage);
-                    //messages.add(Message.receiveObject(in));
                 }
             }
         }

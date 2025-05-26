@@ -189,11 +189,14 @@ public class HomepageController {
             ChatPreview selectedChat = chatListView.getSelectionModel().getSelectedItem();
             if (selectedChat != null) {
                 try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
-                    AnchorPane chatView = loader.load();
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
+                    Scene chatScene = new Scene(loader.load());
                     ChatViewController controller = loader.getController();
                     controller.setChatAndUser(selectedChat.getChatId(), (int) loggedInUser.getId());
-                    chatViewPane.getChildren().setAll(chatView);
+                    controller.setChatTitle(selectedChat.getTitle());
+                // Replace the whole scene
+                Stage stage = (Stage) chatListView.getScene().getWindow();
+                stage.setScene(chatScene);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -211,3 +214,4 @@ public class HomepageController {
         }
     }
 }
+
