@@ -39,7 +39,6 @@ public class MessageHandler {
                 msg.setContent(rs.getString("content"));
                 msg.setMessageType(rs.getString("message_type"));
 
-
                 messages.add(msg);
                 if (id > maxId) {
                     maxId = id;
@@ -51,7 +50,6 @@ public class MessageHandler {
             System.err.println("Error fetching messages from database: " + e.getMessage());
         }
     }
-
 
     public static void handleRequestMessages(int chatId, BufferedWriter out) {
         synchronized (messages) {
@@ -78,7 +76,7 @@ public class MessageHandler {
         synchronized (messages) {
             try {
                 // Create a new message object
-                Message newMsg = new Message();
+                final Message newMsg = new Message();
                 newMsg.setId(messageIdCounter.getAndIncrement());
                 newMsg.setChatId(chatId);
                 newMsg.setSenderId(senderId);
@@ -91,8 +89,14 @@ public class MessageHandler {
                 // Add the new message to the list
                 messages.add(newMsg);
 
-                // Save the message to the database in a new thread
-                new Thread(() -> saveMessageToDatabase(newMsg)).start();
+                // Save the message to the database in a new thread with proper connection handling
+                new Thread(() -> {
+                    try {
+                        saveMessageToDatabase(newMsg);
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, "Error in message saving thread: " + e.getMessage(), e);
+                    }
+                }).start();
 
                 System.out.println("Hello, sent back to client: " + newMsg.getContent());
 
@@ -118,11 +122,18 @@ public class MessageHandler {
                     }
                 }
 
+                for (int userId : userIdsInChat) {
+                    System.out.println("User ID in chat: " + userId);
+                }
+                for (long userIdInClientWriters : clientWriters.keySet()) {
+                    System.out.println("User ID in clientWriters: " + userIdInClientWriters);
+                }
+
                 logger.info("Sent new message with ID: " + newMsg.getId() + " for chat ID: " + chatId);
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error sending new message for chat ID: " + chatId, e);
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                logger.log(Level.SEVERE, "SQL error in handleSendMessage: " + e.getMessage(), e);
             }
         }
     }
@@ -133,18 +144,28 @@ public class MessageHandler {
                         "(chat_id, sender_id, content, message_type, created_at, updated_at) " +
                         "VALUES (?, ?, ?, ?, ?, ?)";
 
+        logger.info("Saving message to database: chatId=" + message.getChatId() +
+                    ", senderId=" + message.getSenderId());
 
-        System.out.println("chatId: " + message.getChatId());
-        System.out.println("senderId: " + message.getSenderId());
-        System.out.println("content: " + message.getContent());
+        // Create a fresh connection for this operation to avoid "Stream closed" errors
+        Connection conn = null;
+        PreparedStatement stmt = null;
 
-        try (Connection conn = DatabaseUtils.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(SQL)) {
+        try {
+            // Get a fresh connection
+            conn = DatabaseUtils.getConnection();
+
+            // Validate that connection is active
+            if (conn == null || conn.isClosed()) {
+                throw new SQLException("Could not establish database connection");
+            }
+
             // Validate required fields
             if (message.getChatId() <= 0 || message.getSenderId() <= 0 || message.getContent() == null) {
                 throw new SQLException("Invalid message data: chat_id, sender_id, and content are required");
             }
 
+            stmt = conn.prepareStatement(SQL);
             stmt.setInt(1, message.getChatId());
             stmt.setInt(2, message.getSenderId());
             stmt.setString(3, message.getContent());
@@ -155,10 +176,29 @@ public class MessageHandler {
             
             int rowsAffected = stmt.executeUpdate();
             logger.info(rowsAffected > 0
-                    ? "Message stored in DB (chatId=" + message.getChatId() + ")"
-                    : "DB insert returned 0 rows");
+                    ? "Message successfully stored in database (chatId=" + message.getChatId() + ")"
+                    : "Database insert returned 0 rows");
+
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error saving message to database: " + e.getMessage(), e);
+        } finally {
+            // Close resources explicitly and individually to ensure proper cleanup
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    logger.log(Level.WARNING, "Error closing PreparedStatement", e);
+                }
+            }
+
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    logger.log(Level.WARNING, "Error closing Connection", e);
+                }
+            }
         }
     }
 }
+
