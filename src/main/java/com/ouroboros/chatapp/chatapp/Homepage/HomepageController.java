@@ -152,7 +152,7 @@ public class HomepageController {
             new Thread(() -> {
                 ChatService.createChatGroup(userIds, chatNameStr);
                 javafx.application.Platform.runLater(() -> {
-                    com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, chatNameStr);
+                    com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, chatNameStr, loggedInUser);
                 });
             }).start();
         } else {

@@ -208,23 +208,11 @@ public class ServerBackend {
                     content = line.substring("content: ".length());
                 }
             }
+            System.out.println("senderId: " + senderId);
+            System.out.println("chatId: " + chatId);
+            System.out.println("content: " + content);
 
             if (chatId != -1 && senderId != -1 && content != null) {
-                Message message = new Message();
-                message.setChatId(chatId);
-                message.setSenderId(senderId);
-                message.setContent(content);
-                message.setMessageType(type);
-                java.time.LocalDateTime now = java.time.LocalDateTime.now();
-                message.setCreatedAt(now);
-                message.setUpdatedAt(now);
-                System.out.println("handleSendMessage received: " + message);
-
-                // Save message to the database
-                MessageHandler.saveMessageToDatabase(message);
-                System.out.println("handleSendMessage saved to database: " + message);
-
-
                 // Handle sending the message
                 MessageHandler.handleSendMessage(chatId, senderId, content, out);
             }

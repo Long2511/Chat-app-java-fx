@@ -65,10 +65,11 @@ public class MessageHandler {
                 newMsg.setCreatedAt(now);
                 newMsg.setUpdatedAt(now);
 
-                saveMessageToDatabase(newMsg);
+//                saveMessageToDatabase(newMsg);
                 // Add the new message to the list
                 messages.add(newMsg);
 
+                System.out.println("Hello, sent back to client: " + newMsg.getContent());
 
                 // Store the message in the database
                 out.write("start: ADD_NEW_MESSAGE\r\n");
