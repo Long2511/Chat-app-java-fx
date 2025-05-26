@@ -52,39 +52,38 @@ public class LoginController implements Initializable {
 
     @FXML
     private void onLoginButtonClick() throws IOException {
-        String email = emailField.getText();
-        String password = passwordField.getText();
+        String email = emailField.getText().trim();
+        String password = passwordField.getText().trim();
+
+        Stage stage = (Stage) loginButton.getScene().getWindow(); // Needed for toast
 
         if (email.isEmpty() || password.isEmpty()) {
-            welcomeLabel.setText("Please fill in all fields.");
+            Toast.show(stage, "Please fill in all fields.", 3000);
             return;
         }
 
-        // Check if userService was initialized properly
         if (userService == null) {
-            welcomeLabel.setText("Cannot connect to server. Please try again later.");
+            Toast.show(stage, "Cannot connect to server. Please try again later.", 3000);
             return;
         }
 
         // Call the UserService to handle login
         loggedInUser = userService.login(email, password);
         if (loggedInUser != null) {
-            welcomeLabel.setText("Login successful!");
+            Toast.show(stage, "Login successful!", 2000);
 
-            // Navigate to the homepage
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
             Scene scene = new Scene(loader.load());
 
-            // Truyền user vào controller
             HomepageController controller = loader.getController();
             controller.setLoggedInUser(loggedInUser);
 
-            Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.setScene(scene);
         } else {
-            welcomeLabel.setText("Invalid email or password.");
+            Toast.show(stage, "Invalid email or password.", 3000);
         }
     }
+
 
 
     @FXML

@@ -238,7 +238,7 @@ public class ServerBackend {
 
             if (chatId != -1 && senderId != -1 && content != null) {
                 // Handle sending the message
-                MessageHandler.handleSendMessage(chatId, senderId, content, out);
+                MessageHandler.handleSendMessage(chatId, senderId, content, type, out);
             }
 
         } catch (Exception e) {

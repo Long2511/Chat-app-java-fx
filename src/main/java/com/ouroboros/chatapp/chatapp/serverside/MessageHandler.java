@@ -80,7 +80,7 @@ public class MessageHandler {
         }
     }
 
-    public static void handleSendMessage(int chatId, int senderId, String content, BufferedWriter out) {
+    public static void handleSendMessage(int chatId, int senderId, String content, String type, BufferedWriter out) {
         synchronized (messages) {
             try {
                 // Create a new message object
@@ -89,7 +89,7 @@ public class MessageHandler {
                 newMsg.setChatId(chatId);
                 newMsg.setSenderId(senderId);
                 newMsg.setContent(content);
-                newMsg.setMessageType("TEXT");
+                newMsg.setMessageType(type);
                 LocalDateTime now = LocalDateTime.now();
                 newMsg.setCreatedAt(now);
                 newMsg.setUpdatedAt(now);
