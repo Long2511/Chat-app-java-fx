@@ -108,7 +108,7 @@ public class ChatHandler {
         }
 
 
-    
+
     // Load chats from database instead of memory
     List<Chat> resultChats = DatabaseUtils.loadChatsForUser(userId);
     System.out.println("DEBUG: Loaded " + resultChats.size() + " chats from database for user " + userId); //debug
@@ -117,7 +117,7 @@ public class ChatHandler {
     out.write("length: " + resultChats.size() + "\r\n");
 
     System.out.println("DEBUG: Sending RESPONSE_GET_ALL_CHATS with " + resultChats.size() + " chats");//debug
-    
+
     for (Chat chat : resultChats) {
         chat.sendObject(out);
 
@@ -133,6 +133,6 @@ public class ChatHandler {
     out.write("end: RESPONSE_GET_ALL_CHATS\r\n");
     out.flush();
     return true;
-    
+
 }
 }

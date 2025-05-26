@@ -66,7 +66,7 @@ public class MessageService {
         out.write("end: SEND_MESSAGE\r\n");
         out.flush();
 
-        receiveNewMessage();
+//        receiveNewMessage();
     }
 
     // Send icon and file (and optionally text, but only encrypt text)

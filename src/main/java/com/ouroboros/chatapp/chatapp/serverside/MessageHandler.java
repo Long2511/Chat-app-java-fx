@@ -37,7 +37,6 @@ public class MessageHandler {
                 msg.setContent(rs.getString("content"));
                 msg.setMessageType(rs.getString("message_type"));
 
-
                 messages.add(msg);
                 if (id > maxId) {
                     maxId = id;
@@ -50,17 +49,10 @@ public class MessageHandler {
         }
     }
 
-
     public static void handleRequestMessages(int chatId, BufferedWriter out) {
         synchronized (messages) {
             try {
                 long length = messages.stream().filter(m -> m.getChatId() == chatId).count();
-
-                out.write("start: RESPONSE_MESSAGES\r\n");
-                out.write("length: " + length + "\r\n");
-                for (Message msg : messages) {
-                    if (msg.getChatId() == chatId) msg.sendObject(out);
-                }
 
                 out.write("start: RESPONSE_MESSAGES\r\n");
                 out.write("length: " + length + "\r\n");
@@ -82,7 +74,7 @@ public class MessageHandler {
         synchronized (messages) {
             try {
                 // Create a new message object
-                Message newMsg = new Message();
+                final Message newMsg = new Message();
                 newMsg.setId(messageIdCounter.getAndIncrement());
                 newMsg.setChatId(chatId);
                 newMsg.setSenderId(senderId);
@@ -95,8 +87,14 @@ public class MessageHandler {
                 // Add the new message to the list
                 messages.add(newMsg);
 
-                // Save the message to the database in a new thread
-                new Thread(() -> saveMessageToDatabase(newMsg)).start();
+                // Save the message to the database in a new thread with proper connection handling
+                new Thread(() -> {
+                    try {
+                        saveMessageToDatabase(newMsg);
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, "Error in message saving thread: " + e.getMessage(), e);
+                    }
+                }).start();
 
                 System.out.println("Hello, sent back to client: " + newMsg.getContent());
 
@@ -109,23 +107,31 @@ public class MessageHandler {
 
                 /// Handle realtime update message
                 // sent notify to other clients in the chat
-                if (chatUsersMap.get(chatId) != null) {
-                    for (int userIdInChat : chatUsersMap.get(chatId)) {
-                        if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
-                            for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
-                                userOut.write("start: ADD_NEW_MESSAGE\r\n");
-                                userOut.write("length: 1\r\n");
-                                newMsg.sendObject(userOut);
-                                userOut.write("end: ADD_NEW_MESSAGE\r\n");
-                                userOut.flush();
-                            }
+                List<Integer> userIdsInChat = DatabaseUtils.getUserIdsInChat(chatId);
+                for (int userIdInChat : userIdsInChat) {
+                    if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
+                        for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
+                            userOut.write("start: ADD_NEW_MESSAGE\r\n");
+                            userOut.write("length: 1\r\n");
+                            newMsg.sendObject(userOut);
+                            userOut.write("end: ADD_NEW_MESSAGE\r\n");
+                            userOut.flush();
                         }
                     }
+                }
+
+                for (int userId : userIdsInChat) {
+                    System.out.println("User ID in chat: " + userId);
+                }
+                for (long userIdInClientWriters : clientWriters.keySet()) {
+                    System.out.println("User ID in clientWriters: " + userIdInClientWriters);
                 }
 
                 logger.info("Sent new message with ID: " + newMsg.getId() + " for chat ID: " + chatId);
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error sending new message for chat ID: " + chatId, e);
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "SQL error in handleSendMessage: " + e.getMessage(), e);
             }
         }
     }
@@ -157,6 +163,7 @@ public class MessageHandler {
                 System.out.println("fileUrl: " + newMsg.getFileUrl());
                 System.out.println("mediaUrl: " + newMsg.getMediaUrl());
 
+                System.out.println("BufferedWriter out: " + out);
                 // send notification to the client
                 out.write("start: ADD_NEW_MESSAGE\r\n");
                 out.write("length: 1\r\n");
@@ -166,23 +173,32 @@ public class MessageHandler {
 
                 /// Handle realtime update message
                 // sent notify to other clients in the chat
-                if (chatUsersMap.get(chatId) != null) {
-                    for (int userIdInChat : chatUsersMap.get(chatId)) {
-                        if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
-                            for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
-                                userOut.write("start: ADD_NEW_MESSAGE\r\n");
-                                userOut.write("length: 1\r\n");
-                                newMsg.sendObject(userOut);
-                                userOut.write("end: ADD_NEW_MESSAGE\r\n");
-                                userOut.flush();
-                            }
+                List<Integer> userIdsInChat = DatabaseUtils.getUserIdsInChat(chatId);
+                for (int userIdInChat : userIdsInChat) {
+                    System.out.println("User ID in chat: " + userIdInChat);
+                    if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
+                        for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
+                            userOut.write("start: ADD_NEW_MESSAGE\r\n");
+                            userOut.write("length: 1\r\n");
+                            newMsg.sendObject(userOut);
+                            userOut.write("end: ADD_NEW_MESSAGE\r\n");
+                            userOut.flush();
+
+                            System.out.println("Sent new message to user ID: " + userIdInChat);
+                            System.out.println("BufferedWriter userOut: " + userOut);
                         }
                     }
+                }
+
+                for (Long userIdInClientWriters : clientWriters.keySet()) {
+                    System.out.println("User ID in clientWriters: " + userIdInClientWriters);
                 }
 
                 logger.info("Sent new message with ID: " + newMsg.getId() + " for chat ID: " + chatId);
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error sending new message for chat ID: " + chatId, e);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         }
     }
@@ -222,3 +238,4 @@ public class MessageHandler {
         }
     }
 }
+

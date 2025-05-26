@@ -4,6 +4,9 @@ import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 import com.ouroboros.chatapp.chatapp.clientside.MessageService;
 import com.ouroboros.chatapp.chatapp.clientside.ClientConnection;
+import com.ouroboros.chatapp.chatapp.clientside.MessageService;
+import com.ouroboros.chatapp.chatapp.datatype.Message;
+import com.ouroboros.chatapp.chatapp.serverside.EncryptionUtil;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
@@ -210,6 +213,8 @@ public class ChatViewController {
                                         int length = Integer.parseInt(line.substring("length: ".length()));
                                         for (int i = 0; i < length && i == 0; i++) {
                                             newMessage = Message.receiveObject(reader);
+                                            String decryptedContent = EncryptionUtil.decrypt(newMessage.getContent(), newMessage.getChatId());
+                                            newMessage.setContent(decryptedContent);
                                         }
                                     }
                                 }
