@@ -1,8 +1,6 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
-import com.ouroboros.chatapp.chatapp.datatype.STATUS;
-import com.ouroboros.chatapp.chatapp.datatype.User;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -14,9 +12,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChatHandler {
-    public static AtomicInteger chatIdCounter = new AtomicInteger(1);
     public static final List<Chat> chats = Collections.synchronizedList(new ArrayList<>());
     public static final Map<Integer, List<Integer>> chatUsersMap = Collections.synchronizedMap(new java.util.HashMap<>());
+    public static AtomicInteger chatIdCounter = new AtomicInteger(1);
 
     public static boolean isCreateChatRequest(String method) {
         return method.equals("start: CREATE_CHAT");
@@ -26,7 +24,7 @@ public class ChatHandler {
         return method.equals("start: GET_ALL_CHATS");
     }
 
-    public static boolean handleCreateChatRequest(BufferedReader in, BufferedWriter out) throws IOException {
+    public static void handleCreateChatRequest(BufferedReader in, BufferedWriter out) throws IOException {
         String chatName = null;
         List<Integer> userIds = new ArrayList<>();
         int userCount = 0;
@@ -49,7 +47,7 @@ public class ChatHandler {
             out.write("message: Invalid chat creation request\r\n");
             out.write("end: RESPONSE_CREATE_CHAT\r\n");
             out.flush();
-            return false;
+            return;
         }
 
         // Create a new chat
@@ -69,8 +67,8 @@ public class ChatHandler {
         // Add the chat to the list of chats
         chats.add(newChat);
 
-        // TODO: Save to database if needed
-        // DatabaseUtils.saveChat(newChat, userIds);
+        // Save to database
+        com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils.saveChat(newChat, userIds);
 
         // Send response
         out.write("start: RESPONSE_CREATE_CHAT\r\n");
@@ -79,7 +77,6 @@ public class ChatHandler {
         out.write("end: RESPONSE_CREATE_CHAT\r\n");
         out.flush();
 
-        return true;
     }
 
     public static boolean handleGetChatsRequest(BufferedReader in, BufferedWriter out) throws IOException {

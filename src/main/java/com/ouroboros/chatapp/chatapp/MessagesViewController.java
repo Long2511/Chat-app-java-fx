@@ -1,12 +1,10 @@
 package com.ouroboros.chatapp.chatapp;
 
-import com.ouroboros.chatapp.chatapp.clientside.ClientConnection;
 import com.ouroboros.chatapp.chatapp.clientside.MessageService;
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -20,25 +18,19 @@ import java.util.ResourceBundle;
 
 public class MessagesViewController implements Initializable {
 
+    private final ObservableList<Message> messageList = FXCollections.observableArrayList();
     @FXML
     private ListView<Message> messagesListView;
-
     @FXML
     private TextField messageField;
-
     @FXML
     private Button sendBtn;
-
     @FXML
     private Button refreshBtn;
-
     @FXML
     private TextField chatIdField;
-
     @FXML
     private TextField senderIdField;
-
-    private final ObservableList<Message> messageList = FXCollections.observableArrayList();
     private MessageService messageService;
 
     @Override

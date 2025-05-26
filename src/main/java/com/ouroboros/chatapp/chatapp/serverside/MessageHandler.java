@@ -2,23 +2,19 @@ package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.text.SimpleDateFormat;
 
 
 public class MessageHandler {
-    public static AtomicInteger messageIdCounter = new AtomicInteger(1);
     public static final List<Message> messages = Collections.synchronizedList(new ArrayList<>());
-
+    public static AtomicInteger messageIdCounter = new AtomicInteger(1);
 
     public static void handleRequestMessages(int chatId, BufferedWriter out) throws IOException {
         int length = 0;
@@ -30,9 +26,10 @@ public class MessageHandler {
 
         out.write("start: RESPONSE_MESSAGES\r\n");
         out.write("length: " + length + "\r\n");
-        for (Message msg : messages) if (msg.getChatId() == chatId) {
-            msg.sendObject(out);
-        }
+        for (Message msg : messages)
+            if (msg.getChatId() == chatId) {
+                msg.sendObject(out);
+            }
         out.write("end: RESPONSE_MESSAGES\r\n");
         out.flush();
         System.out.println("Sent " + length + " messages for chat ID: " + chatId);

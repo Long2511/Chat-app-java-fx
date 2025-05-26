@@ -3,18 +3,20 @@ package com.ouroboros.chatapp.chatapp.clientside;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserService {
-    private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 8080;
 
-    private BufferedReader in;
-    private BufferedWriter out;
+    private final BufferedReader in;
+    private final BufferedWriter out;
 
     /**
      * Creates a new UserService using the existing socket from ClientConnection
+     *
      * @throws IOException if connection fails
      */
     public UserService() throws IOException {
@@ -28,8 +30,61 @@ public class UserService {
     }
 
     /**
+     * Retrieves a list of all users from the server
+     *
+     * @return List of User objects
+     * @throws IOException if an I/O error occurs
+     */
+    public static List<User> getAllUsers() throws IOException {
+        BufferedWriter out = ClientConnection.getSharedWriter();
+        BufferedReader in = ClientConnection.getSharedReader();
+        out.write("start: GET_ALL_USERS\r\n");
+        out.write("end: GET_ALL_USERS\r\n");
+        out.flush();
+        List<User> users = new ArrayList<>();
+        String line;
+        while (!(line = in.readLine()).equals("end: RESPONSE_USERS")) {
+            if (line.startsWith("length: ")) {
+                int length = Integer.parseInt(line.substring("length: ".length()));
+                for (int i = 0; i < length; i++) {
+                    users.add(User.receiveObject(in));
+                }
+            }
+        }
+        return users;
+    }
+
+    /**
+     * Searches for users by name
+     *
+     * @param query the name or part of the name to search for
+     * @return List of User objects matching the search criteria
+     * @throws IOException if an I/O error occurs
+     */
+    public static List<User> searchUsers(String query) throws IOException {
+        BufferedWriter out = ClientConnection.getSharedWriter();
+        BufferedReader in = ClientConnection.getSharedReader();
+        out.write("start: SEARCH_USERS_BY_NAME\r\n");
+        out.write("query: " + query + "\r\n");
+        out.write("end: SEARCH_USERS_BY_NAME\r\n");
+        out.flush();
+        List<User> users = new ArrayList<>();
+        String line;
+        while (!(line = in.readLine()).equals("end: RESPONSE_USERS")) {
+            if (line.startsWith("length: ")) {
+                int length = Integer.parseInt(line.substring("length: ".length()));
+                for (int i = 0; i < length; i++) {
+                    users.add(User.receiveObject(in));
+                }
+            }
+        }
+        return users;
+    }
+
+    /**
      * Authenticates a user with the server
-     * @param email user's email
+     *
+     * @param email    user's email
      * @param password user's password
      * @return STATUS indicating login success or failure
      */
@@ -69,8 +124,9 @@ public class UserService {
 
     /**
      * Registers a new user with the server
+     *
      * @param username user's name
-     * @param email user's email
+     * @param email    user's email
      * @param password user's password
      * @return STATUS indicating registration success or failure
      */
@@ -105,6 +161,7 @@ public class UserService {
 
     /**
      * Logs out the current user
+     *
      * @return STATUS indicating logout success or failure
      */
     public synchronized STATUS logout() {
@@ -130,36 +187,6 @@ public class UserService {
         } catch (Exception e) {
             e.printStackTrace();
             return STATUS.FAILURE;
-        }
-    }
-
-    public static List<User> getAllUsers() {
-        try {
-            // Send request to get all users
-            BufferedWriter out = ClientConnection.getSharedWriter();
-            BufferedReader in = ClientConnection.getSharedReader();
-            out.write("start: GET_ALL_USERS\r\n");
-            out.write("end: GET_ALL_USERS\r\n");
-            out.flush();
-
-            // Read response
-            String line;
-            List<User> users = new java.util.ArrayList<>();
-            while (!(line = in.readLine()).equals("end: GET_ALL_USERS_RESPONSE")) {
-                if (line.startsWith("user: ")) {
-                    String userData = line.substring("user: ".length());
-                    String[] parts = userData.split(",");
-                    User user = new User();
-                    user.setId(Integer.parseInt(parts[0]));
-                    user.setUsername(parts[1]);
-                    user.setEmail(parts[2]);
-                    users.add(user);
-                }
-            }
-            return users;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
     }
 }

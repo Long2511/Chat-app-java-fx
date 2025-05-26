@@ -9,6 +9,9 @@ import java.security.Key;
 import java.util.Date;
 
 public class Utils {
+    private static final String JWT_SECRET = DatabaseUtils.getEnvVar("JWT_SECRET");
+    private static final Key SECRET_KEY = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
+
     public static String readPacket(BufferedReader in) {
         StringBuilder packet = new StringBuilder();
         String line;
@@ -24,9 +27,6 @@ public class Utils {
         }
         return packet.toString().trim(); // Return the complete packet as a string
     }
-
-    private static final String JWT_SECRET = DatabaseUtils.getEnvVar("JWT_SECRET");
-    private static final Key SECRET_KEY = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
 
     public static String createJwtToken(long userId, String username, String email) {
         return Jwts.builder()

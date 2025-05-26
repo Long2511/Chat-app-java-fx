@@ -29,8 +29,8 @@ public class Toast {
     /**
      * Displays a toast message on the screen.
      *
-     * @param ownerStage      The stage on which the toast should be displayed.
-     * @param message         The message to be shown.
+     * @param ownerStage       The stage on which the toast should be displayed.
+     * @param message          The message to be shown.
      * @param durationInMillis Duration for which the toast should be visible (in milliseconds).
      */
     public static void show(Stage ownerStage, String message, int durationInMillis) {

@@ -5,12 +5,14 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 public class User {
-    private int id;
+    private long id;
     private String username;
     private String email;
+    private String avatar;
+    private String status;
 
     // Getters
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -22,8 +24,16 @@ public class User {
         return email;
     }
 
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
     // Setters
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -35,11 +45,21 @@ public class User {
         this.email = email;
     }
 
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public void sendObject(BufferedWriter out) throws IOException {
         out.write("<start of object>\r\n");
         out.write("id: " + id + "\r\n");
         out.write("username: " + username + "\r\n");
         out.write("email: " + email + "\r\n");
+        out.write("avatar: " + (avatar != null ? avatar : "") + "\r\n");
+        out.write("status: " + (status != null ? status : "offline") + "\r\n");
         out.write("<end of object>\r\n");
     }
 
@@ -48,11 +68,15 @@ public class User {
         User user = new User();
         while (!(line = in.readLine()).equals("<end of object>")) {
             if (line.startsWith("id: ")) {
-                user.id = Integer.parseInt(line.substring("id: ".length()));
+                user.id = Long.parseLong(line.substring("id: ".length()));
             } else if (line.startsWith("username: ")) {
                 user.username = line.substring("username: ".length());
             } else if (line.startsWith("email: ")) {
                 user.email = line.substring("email: ".length());
+            } else if (line.startsWith("avatar: ")) {
+                user.avatar = line.substring("avatar: ".length());
+            } else if (line.startsWith("status: ")) {
+                user.status = line.substring("status: ".length());
             }
         }
         return user;
@@ -62,6 +86,7 @@ public class User {
         System.out.println("User ID: " + id);
         System.out.println("Username: " + username);
         System.out.println("Email: " + email);
+        System.out.println("Avatar: " + avatar);
+        System.out.println("Status: " + status);
     }
-
 }

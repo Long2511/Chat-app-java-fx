@@ -15,10 +15,10 @@ public class ChatView extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
             Parent root = loader.load();
 
-            MessagesViewController controller = loader.getController();
+            ChatViewController controller = loader.getController();
 
             primaryStage.setTitle("Chat Demo");
             primaryStage.setScene(new Scene(root, 640, 640));

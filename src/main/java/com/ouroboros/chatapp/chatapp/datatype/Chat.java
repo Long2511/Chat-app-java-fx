@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class Chat {
-    private int id;
+    private long id;
     private String name;
     private String type;
     private String createdAt;
@@ -23,7 +23,7 @@ public class Chat {
     }
 
     // Getters
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -44,7 +44,7 @@ public class Chat {
     }
 
     // Setters
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -79,7 +79,7 @@ public class Chat {
         Chat chat = new Chat();
         while (!(line = in.readLine()).equals("<end of object>")) {
             if (line.startsWith("id: ")) {
-                chat.id = Integer.parseInt(line.substring("id: ".length()));
+                chat.id = Long.parseLong(line.substring("id: ".length()));
             } else if (line.startsWith("name: ")) {
                 chat.name = line.substring("name: ".length());
             } else if (line.startsWith("type: ")) {
@@ -93,11 +93,14 @@ public class Chat {
         return chat;
     }
 
-    public void printChat() {
-        System.out.println("Chat ID: " + id);
-        System.out.println("Name: " + name);
-        System.out.println("Type: " + type);
-        System.out.println("Created At: " + createdAt);
-        System.out.println("Updated At: " + updatedAt);
+    @Override
+    public String toString() {
+        return "Chat{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", createdAt='" + createdAt + '\'' +
+                ", updatedAt='" + updatedAt + '\'' +
+                '}';
     }
 }

@@ -9,6 +9,10 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class HelloApplication extends Application {
+    public static void main(String[] args) {
+        launch();
+    }
+
     @Override
     public void start(Stage primaryStage) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/LoginView.fxml"));
@@ -26,9 +30,5 @@ public class HelloApplication extends Application {
         SceneChanger.setPrimaryStage(primaryStage);
 
         primaryStage.setResizable(false);
-    }
-
-    public static void main(String[] args) {
-        launch();
     }
 }
