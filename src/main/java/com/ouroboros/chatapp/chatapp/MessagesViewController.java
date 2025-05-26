@@ -277,6 +277,7 @@ public class MessagesViewController implements Initializable {
     public void setChatAndSender(int chatId, int senderId) {
         chatIdField.setText(String.valueOf(chatId));
         senderIdField.setText(String.valueOf(senderId));
-//        handleRefresh(); // tự động tải tin nhắn sau khi set
+        loadInitialMessages();
+
     }
 }

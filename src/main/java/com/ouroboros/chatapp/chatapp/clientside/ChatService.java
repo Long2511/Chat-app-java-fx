@@ -111,7 +111,7 @@ public class ChatService {
         return chats;
     }
 
-    public synchronized static Chat createChat(List<User> users, String chatName) {
+    /*public synchronized static Chat createChat(List<User> users, String chatName) {
         try {
             out.write("start: CREATE_CHAT\r\n");
             out.write("name: " + chatName + "\r\n");
@@ -137,7 +137,7 @@ public class ChatService {
             throw new RuntimeException(e);
         }
     }
-
+*/
     public static Chat getChatDetails(int chatId) {
         try {
             out.write("start: GET_CHAT_DETAILS\r\n");
@@ -158,10 +158,34 @@ public class ChatService {
     }
     
 
+    public synchronized static Chat createChat(List<Integer> userIds, String chatNameStr) {
+    try {
+        String chatType = (userIds.size() > 2) ? "GROUP" : "PRIVATE";
+        String chatName = chatType.equals("GROUP")
+                ? (chatNameStr == null || chatNameStr.trim().isEmpty() ? "Group Chat" : chatNameStr)
+                : ""; // PRIVATE chats may not need a name
+
+        out.write("start: CREATE_CHAT\r\n");
+        out.write("chatName: " + chatName + "\r\n");
+        out.write("users: " + userIds.size() + "\r\n");
+        for (Integer userId : userIds) {
+            out.write("userId: " + userId + "\r\n");
+        }
+        out.write("end: CREATE_CHAT\r\n");
+        out.flush();
+
+        // Đọc phản hồi từ server (ví dụ chatId)
+        int chatId = -1;
+        String line;
+        while (!(line = in.readLine()).equals("end: RESPONSE_CREATE_CHAT")) {
+            if (line.startsWith("chatId: ")) {
+                chatId = Integer.parseInt(line.substring("chatId: ".length()));
+            }
+
     /**
      * Create a chat group and return the new chat's ID (or -1 on failure)
      */
-    public synchronized static int createChatGroup(List<Integer> userIds, String chatName) {
+    /*public synchronized static int createChatGroup(List<Integer> userIds, String chatName) {
         try {
             out.write("start: CREATE_CHAT\r\n");
             out.write("chatName: " + chatName + "\r\n");
@@ -182,6 +206,14 @@ public class ChatService {
         } catch (IOException e) {
             System.err.println("Error creating chat group: " + e.getMessage());
             return -1;
+            */
+
         }
+
+        return new Chat(chatId, chatName, null);
+    } catch (IOException e) {
+        System.err.println("Error creating chat: " + e.getMessage());
+        return null;
     }
+}
 }

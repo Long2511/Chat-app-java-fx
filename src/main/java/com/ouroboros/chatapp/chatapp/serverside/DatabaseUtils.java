@@ -62,37 +62,73 @@ public class DatabaseUtils {
         return users;
     }
 
-    public static void saveChat(com.ouroboros.chatapp.chatapp.datatype.Chat chat, List<Integer> userIds) {
-        String insertChatSql = "INSERT INTO chats (name, type, created_at, updated_at) VALUES (?, ?, ?, ?) RETURNING id";
-        String insertParticipantSql = "INSERT INTO chat_participants (chat_id, user_id) VALUES (?, ?)";
-        try (Connection conn = getConnection();
-             java.sql.PreparedStatement chatStmt = conn.prepareStatement(insertChatSql)) {
-            chatStmt.setString(1, chat.getName());
-            chatStmt.setString(2, chat.getType());
-            String createdAt = chat.getCreatedAt() != null ? chat.getCreatedAt() : java.time.LocalDateTime.now().toString();
-            String updatedAt = chat.getUpdatedAt() != null ? chat.getUpdatedAt() : createdAt;
-            chatStmt.setTimestamp(3, java.sql.Timestamp.valueOf(createdAt.replace("T", " ").substring(0, 19)));
-            chatStmt.setTimestamp(4, java.sql.Timestamp.valueOf(updatedAt.replace("T", " ").substring(0, 19)));
-            // Get generated chat id
-            try (java.sql.ResultSet rs = chatStmt.executeQuery()) {
-                if (rs.next()) {
-                    long chatId = rs.getLong(1);
-                    chat.setId(chatId); // update the Chat object with the real DB id
-                    // Create a new PreparedStatement for participants inside this block
-                    try (java.sql.PreparedStatement participantStmt = conn.prepareStatement(insertParticipantSql)) {
-                        for (Integer userId : userIds) {
-                            participantStmt.setLong(1, chatId);
-                            participantStmt.setInt(2, userId);
-                            participantStmt.addBatch();
-                        }
-                        participantStmt.executeBatch();
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public static void saveChat(Chat chat, List<Integer> userIds) {
+    String insertChatSql = "INSERT INTO chats (name, type, created_at, updated_at) VALUES (?, ?, ?, ?)";
+    String insertParticipantSql = "INSERT INTO chat_participants (chat_id, user_id) VALUES (?, ?)";
+
+    try (Connection conn = getConnection();
+         PreparedStatement chatStmt = conn.prepareStatement(insertChatSql, Statement.RETURN_GENERATED_KEYS)) {
+
+        // Thiết lập các giá trị thời gian
+        String createdAt = chat.getCreatedAt();
+        String updatedAt = chat.getUpdatedAt();
+        if (createdAt == null) {
+            createdAt = java.time.LocalDateTime.now().toString();
+            chat.setCreatedAt(createdAt);
         }
+        if (updatedAt == null) {
+            updatedAt = createdAt;
+            chat.setUpdatedAt(updatedAt);
+        }
+
+        // Thiết lập giá trị cho câu lệnh INSERT chat
+        chatStmt.setString(1, chat.getName());
+        chatStmt.setString(2, chat.getType());
+        chatStmt.setTimestamp(3, java.sql.Timestamp.valueOf(createdAt.replace("T", " ").substring(0, 19)));
+        chatStmt.setTimestamp(4, java.sql.Timestamp.valueOf(updatedAt.replace("T", " ").substring(0, 19)));
+
+        // Thực thi và kiểm tra kết quả
+        int affectedRows = chatStmt.executeUpdate();
+        if (affectedRows == 0) {
+            throw new SQLException("Creating chat failed, no rows affected.");
+        }
+
+        // Lấy chat ID được sinh tự động
+        long chatId;
+        try (ResultSet rs = chatStmt.getGeneratedKeys()) {
+            if (rs.next()) {
+                chatId = rs.getLong(1);
+                chat.setId(chatId);
+            } else {
+                throw new SQLException("Creating chat failed, no ID obtained.");
+            }
+        }
+
+        // Kiểm tra danh sách user
+        if (userIds == null || userIds.isEmpty()) {
+            System.err.println("⚠️ userIds is empty. Skipping chat_participants insert for chatId = " + chat.getId());
+            return;
+        }
+
+        // Thêm participants
+        System.out.println("✅ Saving participants for chatId = " + chat.getId());
+        try (PreparedStatement participantStmt = conn.prepareStatement(insertParticipantSql)) {
+            for (Integer userId : userIds) {
+                System.out.println(" - userId = " + userId);
+                participantStmt.setLong(1, chat.getId());
+                participantStmt.setInt(2, userId);
+                participantStmt.addBatch();
+            }
+            participantStmt.executeBatch();
+        }
+
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+}
+
+
+
 
     /**
      * Save a chat and return the generated chatId
@@ -161,9 +197,9 @@ public class DatabaseUtils {
                 throw new SQLException("Missing database password. Check your env file.");
             }
             String url = String.format(
-                    "jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?user=postgres.irbxtfznezpoxueldryq&password=%s",
-                    password
-            );
+            "jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?user=postgres.irbxtfznezpoxueldryq&password=%s&prepareThreshold=0",
+            password
+        );
             connection = DriverManager.getConnection(url);
         }
         return connection;

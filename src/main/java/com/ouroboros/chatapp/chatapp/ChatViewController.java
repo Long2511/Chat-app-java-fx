@@ -429,13 +429,24 @@ public class ChatViewController {
     private void handleBackButton() {
         // Do proper cleanup before navigating back
         cleanup();
-
         try {
-            SceneChanger.changeScene("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml");
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
+            Scene scene = new Scene(loader.load());
+            // Use fully qualified name for HomepageController
+            com.ouroboros.chatapp.chatapp.Homepage.HomepageController homepageController = loader.getController();
+            homepageController.setLoggedInUser(this.getCurrentUser());
+            Stage stage = (Stage) messageContainer.getScene().getWindow();
+            stage.setScene(scene);
         } catch (IOException e) {
             Stage stage = (Stage) messageContainer.getScene().getWindow();
             Toast.show(stage, "Cannot go back", 4000);
         }
+    }
+
+    public User getCurrentUser() {
+        User user = new User();
+        user.setId(currentUserId);
+        return user;
     }
 
     /**
