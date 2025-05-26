@@ -13,4 +13,5 @@ module com.ouroboros.chatapp.chatapp {
      opens com.ouroboros.chatapp.chatapp.Homepage to javafx.fxml;
     exports com.ouroboros.chatapp.chatapp.Homepage to javafx.fxml;
     exports com.ouroboros.chatapp.chatapp.datatype;
+    exports com.ouroboros.chatapp.chatapp.serverside;
 }

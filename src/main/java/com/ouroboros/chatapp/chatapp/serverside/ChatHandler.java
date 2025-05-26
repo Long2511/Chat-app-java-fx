@@ -52,29 +52,24 @@ public class ChatHandler {
         }
 
         // Create a new chat
-        int chatId = chatIdCounter.getAndIncrement();
         Chat newChat = new Chat();
-        newChat.setId(chatId);
         newChat.setName(chatName);
-        newChat.setType(userIds.size() > 1 ? "group" : "direct");
+        newChat.setType(userIds.size() > 2 ? "GROUP" : "PRIVATE");
+        newChat.setCreatedAt(java.time.LocalDateTime.now().toString());
+        newChat.setUpdatedAt(newChat.getCreatedAt());
+        
+        //Save the chat to the database, returning ID
+        DatabaseUtils.saveChat(newChat, userIds);
+        long newChatId = newChat.getId(); 
 
-        if (!chatUsersMap.containsKey(chatId)) {
-            chatUsersMap.put(chatId, new ArrayList<>());
-        }
-        for (int userId : userIds) {
-            chatUsersMap.get(chatId).add(userId);
-        }
-
-        // Add the chat to the list of chats
+        //update to memory
+        chatUsersMap.put((int) newChatId, userIds);
         chats.add(newChat);
-
-        // Save to database
-        com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils.saveChat(newChat, userIds);
 
         // Send response
         out.write("start: RESPONSE_CREATE_CHAT\r\n");
         out.write("status: SUCCESS\r\n");
-        out.write("chatId: " + chatId + "\r\n");
+        out.write("chatId: " + newChatId + "\r\n");
         out.write("end: RESPONSE_CREATE_CHAT\r\n");
         out.flush();
 
