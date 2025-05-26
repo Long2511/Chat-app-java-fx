@@ -278,5 +278,6 @@ public class MessagesViewController implements Initializable {
         chatIdField.setText(String.valueOf(chatId));
         senderIdField.setText(String.valueOf(senderId));
         loadInitialMessages();
+
     }
 }
