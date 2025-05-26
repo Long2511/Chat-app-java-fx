@@ -225,4 +225,21 @@ public class DatabaseUtils {
     }
     return userChats;
 }
+
+    public static List<Integer> getUserIdsInChat(int chatId) {
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT user_id FROM chat_participants WHERE chat_id = ?")) {
+            stmt.setInt(1, chatId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Integer> userIds = new ArrayList<>();
+                while (rs.next()) {
+                    userIds.add(rs.getInt("user_id"));
+                }
+                return userIds;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 }
