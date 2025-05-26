@@ -1,7 +1,6 @@
 package com.ouroboros.chatapp.chatapp.Homepage;
 
 import com.ouroboros.chatapp.chatapp.ChatViewController;
-import com.ouroboros.chatapp.chatapp.MessagesViewController;
 import com.ouroboros.chatapp.chatapp.clientside.ChatService;
 import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
@@ -15,7 +14,6 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import javafx.scene.Node;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -215,13 +213,14 @@ public class HomepageController {
         if (selectedChat != null) {
             System.out.println("Chat selected: " + selectedChat.getTitle());
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
-                AnchorPane chatView = loader.load();
-                //set the chat ID and sender ID in the controller
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
+                Scene chatScene = new Scene(loader.load());
                 ChatViewController controller = loader.getController();
                 controller.setChatAndUser(selectedChat.getChatId(), (int) loggedInUser.getId());
-
-                chatViewPane.getChildren().setAll(chatView);
+                controller.setChatTitle(selectedChat.getTitle());
+                // Replace the whole scene
+                Stage stage = (Stage) chatListView.getScene().getWindow();
+                stage.setScene(chatScene);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -239,19 +238,4 @@ public class HomepageController {
             e.printStackTrace();
         }
     }
-
-
-
-   /*  @FXML
-    private void handleTabChange() {
-        Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
-        if ("Message".equals(selectedTab.getText())) {
-            try {
-                AnchorPane chatView = FXMLLoader.load(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
-                chatViewPane.getChildren().setAll(chatView);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }*/
 }

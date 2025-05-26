@@ -1,13 +1,11 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Message;
-import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -132,32 +130,89 @@ public class MessageHandler {
         }
     }
 
+    // Overload to support fileUrl/mediaUrl
+    public static void handleSendMessage(int chatId, int senderId, String content, String type, String fileUrl, String mediaUrl, BufferedWriter out) {
+        synchronized (messages) {
+            try {
+                // Create a new message object
+                Message newMsg = new Message();
+                newMsg.setId(messageIdCounter.getAndIncrement());
+                newMsg.setChatId(chatId);
+                newMsg.setSenderId(senderId);
+                newMsg.setContent(content);
+                newMsg.setMessageType(type);
+                newMsg.setFileUrl(fileUrl);
+                newMsg.setMediaUrl(mediaUrl);
+                LocalDateTime now = LocalDateTime.now();
+                newMsg.setCreatedAt(now);
+                newMsg.setUpdatedAt(now);
+
+                // Add the new message to the list
+                messages.add(newMsg);
+
+                // Save the message to the database in a new thread
+                new Thread(() -> saveMessageToDatabase(newMsg)).start();
+
+                System.out.println("Hello, sent back to client: " + newMsg.getContent());
+                System.out.println("fileUrl: " + newMsg.getFileUrl());
+                System.out.println("mediaUrl: " + newMsg.getMediaUrl());
+
+                // send notification to the client
+                out.write("start: ADD_NEW_MESSAGE\r\n");
+                out.write("length: 1\r\n");
+                newMsg.sendObject(out);
+                out.write("end: ADD_NEW_MESSAGE\r\n");
+                out.flush();
+
+                /// Handle realtime update message
+                // sent notify to other clients in the chat
+                if (chatUsersMap.get(chatId) != null) {
+                    for (int userIdInChat : chatUsersMap.get(chatId)) {
+                        if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
+                            for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
+                                userOut.write("start: ADD_NEW_MESSAGE\r\n");
+                                userOut.write("length: 1\r\n");
+                                newMsg.sendObject(userOut);
+                                userOut.write("end: ADD_NEW_MESSAGE\r\n");
+                                userOut.flush();
+                            }
+                        }
+                    }
+                }
+
+                logger.info("Sent new message with ID: " + newMsg.getId() + " for chat ID: " + chatId);
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error sending new message for chat ID: " + chatId, e);
+            }
+        }
+    }
+
     public static void saveMessageToDatabase(Message message) {
         final String SQL =
                 "INSERT INTO messages " +
-                        "(chat_id, sender_id, content, message_type, created_at, updated_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?)";
-
+                        "(chat_id, sender_id, content, message_type, file_url, media_url, created_at, updated_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         System.out.println("chatId: " + message.getChatId());
         System.out.println("senderId: " + message.getSenderId());
         System.out.println("content: " + message.getContent());
+        System.out.println("fileUrl: " + message.getFileUrl());
+        System.out.println("mediaUrl: " + message.getMediaUrl());
 
         try (Connection conn = DatabaseUtils.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
             // Validate required fields
-            if (message.getChatId() <= 0 || message.getSenderId() <= 0 || message.getContent() == null) {
-                throw new SQLException("Invalid message data: chat_id, sender_id, and content are required");
+            if (message.getChatId() <= 0 || message.getSenderId() <= 0) {
+                throw new SQLException("Invalid message data: chat_id and sender_id are required");
             }
-
             stmt.setInt(1, message.getChatId());
             stmt.setInt(2, message.getSenderId());
             stmt.setString(3, message.getContent());
-            stmt.setString(4,
-                    (message.getMessageType() == null ? "TEXT" : message.getMessageType().toUpperCase()));
-            stmt.setTimestamp(5, Timestamp.valueOf(message.getCreatedAt()));
-            stmt.setTimestamp(6, Timestamp.valueOf(message.getUpdatedAt()));
-            
+            stmt.setString(4, (message.getMessageType() == null ? "TEXT" : message.getMessageType().toUpperCase()));
+            stmt.setString(5, message.getFileUrl());
+            stmt.setString(6, message.getMediaUrl());
+            stmt.setTimestamp(7, Timestamp.valueOf(message.getCreatedAt()));
+            stmt.setTimestamp(8, Timestamp.valueOf(message.getUpdatedAt()));
             int rowsAffected = stmt.executeUpdate();
             logger.info(rowsAffected > 0
                     ? "Message stored in DB (chatId=" + message.getChatId() + ")"

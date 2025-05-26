@@ -4,8 +4,6 @@ import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 import com.ouroboros.chatapp.chatapp.clientside.MessageService;
 import com.ouroboros.chatapp.chatapp.clientside.ClientConnection;
-import com.ouroboros.chatapp.chatapp.clientside.MessageService;
-import com.ouroboros.chatapp.chatapp.datatype.Message;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
@@ -23,17 +21,8 @@ import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import javafx.application.Platform;
 import javafx.stage.Modality;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.Scene;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.geometry.Insets;
-
-
 import java.io.BufferedReader;
 
 import java.awt.*;
@@ -52,6 +41,8 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 
 import com.ouroboros.chatapp.chatapp.clientside.Toast;
+import javafx.stage.FileChooser;
+import javafx.geometry.Insets;
 
 public class ChatViewController {
     @FXML
@@ -148,10 +139,8 @@ public class ChatViewController {
                 Platform.runLater(() -> {
                     messageContainer.getChildren().clear();
                     for (Message message : messages) {
-                        boolean isFromCurrentUser = message.getSenderId() == currentUserId;
-                        addMessage(message.getContent(), isFromCurrentUser);
+                        renderMessage(message);
                     }
-
                     // Scroll to bottom
                     messageScroll.setVvalue(1.0);
                     System.out.println("Initial messages loaded for chat ID: " + chatId);
@@ -231,8 +220,7 @@ public class ChatViewController {
                                 if (newMessage != null && newMessage.getChatId() == currentChatId) {
                                     final Message displayMessage = newMessage;
                                     Platform.runLater(() -> {
-                                        boolean isFromCurrentUser = displayMessage.getSenderId() == currentUserId;
-                                        addMessage(displayMessage.getContent(), isFromCurrentUser);
+                                        renderMessage(displayMessage);
                                         // Scroll to bottom
                                         messageScroll.setVvalue(1.0);
                                     });
@@ -335,6 +323,12 @@ public class ChatViewController {
 
     @FXML
     private void handleFileUpload() {
+        // GUARD: Prevent recursive or programmatic triggering
+        if (!Platform.isFxApplicationThread()) {
+            System.err.println("handleFileUpload should only be called from user action on the FX thread");
+            return;
+        }
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select File to Send");
 
@@ -360,15 +354,17 @@ public class ChatViewController {
                 msg.setChatId(currentChatId);
                 msg.setSenderId(currentUserId);
                 msg.setMessageType(Message.TYPE_FILE);
-                msg.setContent("uploads/" + selectedFile.getName());
+                msg.setContent(selectedFile.getName()); // Just the filename or a description
+                msg.setFileUrl("uploads/" + selectedFile.getName()); // Store the file path in fileUrl
                 msg.setCreatedAt(LocalDateTime.now());
                 msg.setUpdatedAt(msg.getCreatedAt());
 
                 MessageService messageService = new MessageService();
-                messageService.sendMessage(msg);
+                // Use sendFile for file messages, not sendMessage
+                messageService.sendFile(msg, selectedFile);
 
-                // 3. Render the message in the chat view
-                renderMessage(msg);
+                // REMOVE the following line to avoid recursive update:
+                // renderMessage(msg);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -522,10 +518,12 @@ public class ChatViewController {
     private void renderMessage(Message msg) {
         Label label;
         if (msg.isFile()) {
+            // Use fileUrl for file messages
+            String filePath = msg.getFileUrl() != null && !msg.getFileUrl().isEmpty() ? msg.getFileUrl() : msg.getContent();
             Hyperlink fileLink = new Hyperlink("📄 " + msg.getContent());
             fileLink.setOnAction(e -> {
                 try {
-                    File file = new File(msg.getContent());
+                    File file = new File(filePath);
                     Desktop.getDesktop().open(file);
                 } catch (IOException ex) {
                     ex.printStackTrace();
