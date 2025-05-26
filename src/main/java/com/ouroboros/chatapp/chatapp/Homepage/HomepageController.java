@@ -59,8 +59,7 @@ public class HomepageController {
             @Override
             protected void updateItem(User user, boolean empty) {
                 super.updateItem(user, empty);
-                setText((empty || user == null) ? null : user.getUsername() +
-                        (user.getStatus() != null ? " [" + user.getStatus() + "]" : ""));
+                setText((empty || user == null) ? null : user.getUsername());
             }
         });
 
