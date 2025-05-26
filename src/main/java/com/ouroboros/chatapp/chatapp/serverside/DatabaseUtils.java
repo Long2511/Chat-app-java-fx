@@ -6,17 +6,8 @@ import org.postgresql.Driver;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 
@@ -27,7 +18,6 @@ public class DatabaseUtils {
 
     static {
         try {
-            // Register PostgreSQL driver
             DriverManager.registerDriver(new Driver());
         } catch (SQLException e) {
             System.err.println("Failed to register PostgreSQL driver: " + e.getMessage());
@@ -40,12 +30,12 @@ public class DatabaseUtils {
     }
 
     public static List<User> searchUsersByName(String query) {
-        List<User> users = new java.util.ArrayList<>();
+        List<User> users = new ArrayList<>();
         String sql = "SELECT id, username, email, avatar, status FROM users WHERE username ILIKE ?";
         try (Connection conn = getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, "%" + query + "%");
-            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+            try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     User user = new User();
                     user.setId(rs.getLong("id"));
@@ -62,60 +52,28 @@ public class DatabaseUtils {
         return users;
     }
 
-    public static void saveChat(com.ouroboros.chatapp.chatapp.datatype.Chat chat, List<Integer> userIds) {
-        String insertChatSql = "INSERT INTO chats (name, type, created_at, updated_at) VALUES (?, ?, ?, ?) RETURNING id";
-        String insertParticipantSql = "INSERT INTO chat_participants (chat_id, user_id) VALUES (?, ?)";
-        try (Connection conn = getConnection();
-             java.sql.PreparedStatement chatStmt = conn.prepareStatement(insertChatSql)) {
-            chatStmt.setString(1, chat.getName());
-            chatStmt.setString(2, chat.getType());
-            String createdAt = chat.getCreatedAt() != null ? chat.getCreatedAt() : java.time.LocalDateTime.now().toString();
-            String updatedAt = chat.getUpdatedAt() != null ? chat.getUpdatedAt() : createdAt;
-            chatStmt.setTimestamp(3, java.sql.Timestamp.valueOf(createdAt.replace("T", " ").substring(0, 19)));
-            chatStmt.setTimestamp(4, java.sql.Timestamp.valueOf(updatedAt.replace("T", " ").substring(0, 19)));
-            // Get generated chat id
-            try (java.sql.ResultSet rs = chatStmt.executeQuery()) {
-                if (rs.next()) {
-                    long chatId = rs.getLong(1);
-                    chat.setId(chatId); // update the Chat object with the real DB id
-                    // Create a new PreparedStatement for participants inside this block
-                    try (java.sql.PreparedStatement participantStmt = conn.prepareStatement(insertParticipantSql)) {
-                        for (Integer userId : userIds) {
-                            participantStmt.setLong(1, chatId);
-                            participantStmt.setInt(2, userId);
-                            participantStmt.addBatch();
-                        }
-                        participantStmt.executeBatch();
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Save a chat and return the generated chatId
-     */
-    public static long saveChatAndReturnId(com.ouroboros.chatapp.chatapp.datatype.Chat chat, List<Integer> userIds) {
+    public static long saveChatAndReturnId(Chat chat, List<Integer> userIds) {
         String insertChatSql = "INSERT INTO chats (name, type, created_at, updated_at) VALUES (?, ?, ?, ?) RETURNING id";
         String insertParticipantSql = "INSERT INTO chat_participants (chat_id, user_id) VALUES (?, ?)";
         long chatId = -1;
+
         try (Connection conn = getConnection();
-             java.sql.PreparedStatement chatStmt = conn.prepareStatement(insertChatSql)) {
-            chatStmt.setString(1, chat.getName());
-            chatStmt.setString(2, chat.getType());
+             PreparedStatement chatStmt = conn.prepareStatement(insertChatSql)) {
+
             String createdAt = chat.getCreatedAt() != null ? chat.getCreatedAt() : java.time.LocalDateTime.now().toString();
             String updatedAt = chat.getUpdatedAt() != null ? chat.getUpdatedAt() : createdAt;
-            chatStmt.setTimestamp(3, java.sql.Timestamp.valueOf(createdAt.replace("T", " ").substring(0, 19)));
-            chatStmt.setTimestamp(4, java.sql.Timestamp.valueOf(updatedAt.replace("T", " ").substring(0, 19)));
-            // Get generated chat id
-            try (java.sql.ResultSet rs = chatStmt.executeQuery()) {
+
+            chatStmt.setString(1, chat.getName());
+            chatStmt.setString(2, chat.getType());
+            chatStmt.setTimestamp(3, Timestamp.valueOf(createdAt.replace("T", " ").substring(0, 19)));
+            chatStmt.setTimestamp(4, Timestamp.valueOf(updatedAt.replace("T", " ").substring(0, 19)));
+
+            try (ResultSet rs = chatStmt.executeQuery()) {
                 if (rs.next()) {
                     chatId = rs.getLong(1);
-                    chat.setId(chatId); // update the Chat object with the real DB id
-                    // Create a new PreparedStatement for participants inside this block
-                    try (java.sql.PreparedStatement participantStmt = conn.prepareStatement(insertParticipantSql)) {
+                    chat.setId(chatId);
+
+                    try (PreparedStatement participantStmt = conn.prepareStatement(insertParticipantSql)) {
                         for (Integer userId : userIds) {
                             participantStmt.setLong(1, chatId);
                             participantStmt.setInt(2, userId);
@@ -125,6 +83,7 @@ public class DatabaseUtils {
                     }
                 }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -136,10 +95,7 @@ public class DatabaseUtils {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
-                // Skip comments or empty lines
-                if (line.isEmpty() || line.startsWith("//") || line.startsWith("#")) {
-                    continue;
-                }
+                if (line.isEmpty() || line.startsWith("//") || line.startsWith("#")) continue;
                 int eqIndex = line.indexOf('=');
                 if (eqIndex > 0) {
                     String key = line.substring(0, eqIndex).trim();
@@ -161,8 +117,8 @@ public class DatabaseUtils {
                 throw new SQLException("Missing database password. Check your env file.");
             }
             String url = String.format(
-                    "jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?user=postgres.irbxtfznezpoxueldryq&password=%s",
-                    password
+                "jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?user=postgres.irbxtfznezpoxueldryq&password=%s&prepareThreshold=0",
+                password
             );
             connection = DriverManager.getConnection(url);
         }
@@ -179,20 +135,21 @@ public class DatabaseUtils {
             }
         }
     }
+
     public static List<Chat> loadChatsForUser(int userId) {
         List<Chat> userChats = new ArrayList<>();
-        try (Connection conn = getConnection()) {
-            // Query to get chats and their participants
-            String sql = """
+        String sql = """
                 SELECT c.id, c.name, c.type, c.created_at, c.updated_at,
-                   u.id AS participant_id, u.username
+                       u.id AS participant_id, u.username
                 FROM chats c
                 JOIN chat_participants cp ON cp.chat_id = c.id
                 JOIN users u ON u.id = cp.user_id
                 WHERE c.id IN (SELECT chat_id FROM chat_participants WHERE user_id = ?)
                 ORDER BY c.id, u.id
-                """;    
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                """;
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setLong(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
                 Map<Long, Chat> chatMap = new HashMap<>();
@@ -219,10 +176,9 @@ public class DatabaseUtils {
                 }
                 userChats.addAll(chatMap.values());
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
+        return userChats;
     }
-    return userChats;
-}
 }
