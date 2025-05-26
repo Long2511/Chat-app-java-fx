@@ -10,6 +10,13 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
+
 
 public class ChatService {
 
@@ -132,5 +139,22 @@ public class ChatService {
             System.err.println("Error creating chat: " + e.getMessage());
         }
         return null;
+    }
+    public static void saveChatToDatabase(Chat chat) {
+        try (Connection connection = DatabaseUtils.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(
+                     "INSERT INTO chats (name) VALUES (?)", Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, chat.getName());
+            stmt.executeUpdate();
+
+            // Lấy ID của chat vừa được tạo
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                chat.setId(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
