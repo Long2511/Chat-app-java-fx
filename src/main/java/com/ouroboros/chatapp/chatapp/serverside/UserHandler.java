@@ -1,7 +1,7 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
 import com.ouroboros.chatapp.chatapp.datatype.User;
-import java.io.PrintWriter;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class UserHandler {
-    // TODO: Replace with actual database logic to fetch users
     public static void handleGetAllUsers(PrintWriter out) {
         List<User> users = DatabaseUtils.searchUsersByName(""); // Empty string returns all users
         out.println("start: RESPONSE_USERS");
@@ -51,7 +50,7 @@ public class UserHandler {
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM users WHERE id = ?")) {
             stmt.setInt(1, userId);
             stmt.executeUpdate();
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }

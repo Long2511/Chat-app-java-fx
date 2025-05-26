@@ -53,6 +53,7 @@ public class MessageHandler {
         synchronized (messages) {
             try {
                 long length = messages.stream().filter(m -> m.getChatId() == chatId).count();
+                System.out.println("Length of messages for chat ID " + chatId + ": " + length);
 
                 out.write("start: RESPONSE_MESSAGES\r\n");
                 out.write("length: " + length + "\r\n");
@@ -60,6 +61,7 @@ public class MessageHandler {
                     if (msg.getChatId() == chatId) {
                         msg.sendObject(out);
                     }
+                    System.out.println("message content: " + msg.getContent());
                 }
                 out.write("end: RESPONSE_MESSAGES\r\n");
                 out.flush();
@@ -70,73 +72,7 @@ public class MessageHandler {
         }
     }
 
-    public static void handleSendMessage(int chatId, int senderId, String content, String type, BufferedWriter out) {
-        synchronized (messages) {
-            try {
-                // Create a new message object
-                final Message newMsg = new Message();
-                newMsg.setId(messageIdCounter.getAndIncrement());
-                newMsg.setChatId(chatId);
-                newMsg.setSenderId(senderId);
-                newMsg.setContent(content);
-                newMsg.setMessageType(type);
-                LocalDateTime now = LocalDateTime.now();
-                newMsg.setCreatedAt(now);
-                newMsg.setUpdatedAt(now);
 
-                // Add the new message to the list
-                messages.add(newMsg);
-
-                // Save the message to the database in a new thread with proper connection handling
-                new Thread(() -> {
-                    try {
-                        saveMessageToDatabase(newMsg);
-                    } catch (Exception e) {
-                        logger.log(Level.SEVERE, "Error in message saving thread: " + e.getMessage(), e);
-                    }
-                }).start();
-
-                System.out.println("Hello, sent back to client: " + newMsg.getContent());
-
-                // send notification to the client
-                out.write("start: ADD_NEW_MESSAGE\r\n");
-                out.write("length: 1\r\n");
-                newMsg.sendObject(out);
-                out.write("end: ADD_NEW_MESSAGE\r\n");
-                out.flush();
-
-                /// Handle realtime update message
-                // sent notify to other clients in the chat
-                List<Integer> userIdsInChat = DatabaseUtils.getUserIdsInChat(chatId);
-                for (int userIdInChat : userIdsInChat) {
-                    if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
-                        for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
-                            userOut.write("start: ADD_NEW_MESSAGE\r\n");
-                            userOut.write("length: 1\r\n");
-                            newMsg.sendObject(userOut);
-                            userOut.write("end: ADD_NEW_MESSAGE\r\n");
-                            userOut.flush();
-                        }
-                    }
-                }
-
-                for (int userId : userIdsInChat) {
-                    System.out.println("User ID in chat: " + userId);
-                }
-                for (long userIdInClientWriters : clientWriters.keySet()) {
-                    System.out.println("User ID in clientWriters: " + userIdInClientWriters);
-                }
-
-                logger.info("Sent new message with ID: " + newMsg.getId() + " for chat ID: " + chatId);
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error sending new message for chat ID: " + chatId, e);
-            } catch (SQLException e) {
-                logger.log(Level.SEVERE, "SQL error in handleSendMessage: " + e.getMessage(), e);
-            }
-        }
-    }
-
-    // Overload to support fileUrl/mediaUrl
     public static void handleSendMessage(int chatId, int senderId, String content, String type, String fileUrl, String mediaUrl, BufferedWriter out) {
         synchronized (messages) {
             try {

@@ -169,37 +169,6 @@ public class UserService {
         }
     }
 
-    /**
-     * Logs out the current user
-     *
-     * @return STATUS indicating logout success or failure
-     */
-    public synchronized STATUS logout() {
-        try {
-            // Send logout request to server
-            out.write("start: LOGOUT\r\n");
-            out.write("end: LOGOUT\r\n");
-            out.flush();
-
-            // Read response
-            String line;
-            while (!(line = in.readLine()).equals("end: LOGOUT_RESPONSE")) {
-                if (line.startsWith("status: ")) {
-                    String status = line.substring("status: ".length());
-                    if (status.equals("SUCCESS")) {
-                        return STATUS.SUCCESS;
-                    } else {
-                        return STATUS.FAILURE;
-                    }
-                }
-            }
-            return STATUS.SUCCESS; // Default to success for logout even if no response
-        } catch (Exception e) {
-            e.printStackTrace();
-            return STATUS.FAILURE;
-        }
-    }
-
 
     public static boolean forgotPassword(String email, String newPassword) {
         try {

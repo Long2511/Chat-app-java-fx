@@ -2,14 +2,13 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
 <!-- Chat view layout -->
 
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/17.0.6" stylesheets="@./css/chatView.css" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.ChatViewController">
+<AnchorPane prefHeight="640.0" prefWidth="640.0" stylesheets="@./css/chatView.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.ChatViewController">
 
     <!-- ===== Top Bar: user being chatted with ===== -->
     <children>
@@ -22,7 +21,7 @@
             <Region prefHeight="33.0" prefWidth="380.0" />
 
                 <!-- Username label -->
-                <Label fx:id="chatTitle" alignment="CENTER_LEFT" prefHeight="33.0" prefWidth="124.0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Username" textAlignment="RIGHT" />
+                <Label fx:id="chatTitle" alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="33.0" prefWidth="124.0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Username" textAlignment="RIGHT" />
                 <!-- Small rectangle (could be replaced by an avatar later) -->
                 <Rectangle fx:id="avatarRect" arcHeight="8.0" arcWidth="8.0" fill="#7b97b2" height="32.0" stroke="BLACK" width="32.0" />
             </children>
@@ -43,8 +42,7 @@
                 <!-- StackPane to overlay the emoji button inside the TextField -->
                 <StackPane>
                     <TextField fx:id="messageInput" prefHeight="45.0" prefWidth="500.0" promptText="Type your message..." />
-                    <Button fx:id="emojiButton" mnemonicParsing="false" styleClass="icon-button" onAction="#handleIconClick"
-                            prefHeight="30.0" prefWidth="30.0" style="-fx-background-color: transparent; -fx-cursor: hand;" StackPane.alignment="CENTER_RIGHT">
+                    <Button fx:id="emojiButton" mnemonicParsing="false" onAction="#handleIconClick" prefHeight="30.0" prefWidth="30.0" style="-fx-background-color: transparent; -fx-cursor: hand;" styleClass="icon-button" StackPane.alignment="CENTER_RIGHT">
                         <graphic>
                             <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                 <image>

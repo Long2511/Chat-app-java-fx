@@ -24,10 +24,6 @@ public class User {
         return email;
     }
 
-    public String getAvatar() {
-        return avatar;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -80,13 +76,5 @@ public class User {
             }
         }
         return user;
-    }
-
-    public void printUser() {
-        System.out.println("User ID: " + id);
-        System.out.println("Username: " + username);
-        System.out.println("Email: " + email);
-        System.out.println("Avatar: " + avatar);
-        System.out.println("Status: " + status);
     }
 }

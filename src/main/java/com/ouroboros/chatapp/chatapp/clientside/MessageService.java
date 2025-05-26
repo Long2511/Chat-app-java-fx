@@ -69,24 +69,6 @@ public class MessageService {
 //        receiveNewMessage();
     }
 
-    // Send icon and file (and optionally text, but only encrypt text)
-    public synchronized void sendMessage(Message m) throws Exception {
-        String contentToSend = m.getContent();
-        // Only encrypt if not a file message
-        if (!m.isFile()) {
-            contentToSend = EncryptionUtil.encrypt(contentToSend, m.getChatId());
-        }
-        out.write("start: SEND_MESSAGE\r\n");
-        out.write("chatId: "      + m.getChatId()      + "\r\n");
-        out.write("senderId: "    + m.getSenderId()    + "\r\n");
-        out.write("messageType: " + m.getMessageType() + "\r\n");
-        out.write("content: "     + contentToSend     + "\r\n");
-        out.write("end: SEND_MESSAGE\r\n");
-        out.flush();
-
-        receiveNewMessage();
-    }
-
     /**
      * Dedicated method for sending file messages. Do not use sendMessage for files!
      * This method assumes the file is already uploaded to the server (or local uploads/).
@@ -132,6 +114,7 @@ public class MessageService {
                     if (!encryptedMessage.isFile()) {
                         String decryptedContent = EncryptionUtil.decrypt(encryptedMessage.getContent(), encryptedMessage.getChatId());
                         encryptedMessage.setContent(decryptedContent);
+                        System.out.println("Message " + i + ": " + decryptedContent);
                     }
                     messages.add(encryptedMessage);
                 }
@@ -160,36 +143,6 @@ public class MessageService {
                 }
             }
         }
-    }
-
-    /**
-     * Checks if there's a new message marker in the input stream without blocking
-     * @return The line containing the marker, or null if no data is available
-     */
-    public synchronized String checkForNewMessageMarker() {
-        try {
-            // Check if there's data available to read without blocking
-            if (ClientConnection.getSharedSocket().getInputStream().available() > 0) {
-                // Mark the current position in case we need to reset
-                in.mark(1024);
-
-                // Try to read a line
-                String line = in.readLine();
-
-                if (line != null && line.equals("start: ADD_NEW_MESSAGE")) {
-                    // Found the marker
-                    return line;
-                } else {
-                    // Not what we're looking for, reset the stream position
-                    in.reset();
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error checking for new message marker: " + e.getMessage());
-        }
-
-        // No marker found
-        return null;
     }
 
     /**
