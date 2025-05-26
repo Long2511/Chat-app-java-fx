@@ -178,6 +178,7 @@ public class ServerBackend {
             int chatId = -1;
             int senderId = -1;
             String content = null;
+            String type = "TEXT"; // Default message type
 
             String line;
             while (!(line = in.readLine()).equals("end: SEND_MESSAGE")) {
@@ -195,7 +196,7 @@ public class ServerBackend {
                 message.setChatId(chatId);
                 message.setSenderId(senderId);
                 message.setContent(content);
-                message.setMessageType("text");
+                message.setMessageType(type);
                 java.time.LocalDateTime now = java.time.LocalDateTime.now();
                 message.setCreatedAt(now);
                 message.setUpdatedAt(now);

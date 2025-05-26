@@ -2,9 +2,11 @@ package com.ouroboros.chatapp.chatapp.Homepage;
 
 import com.ouroboros.chatapp.chatapp.MessagesViewController;
 import com.ouroboros.chatapp.chatapp.clientside.ChatService;
+import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -12,6 +14,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.scene.Node;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -134,19 +137,28 @@ public class HomepageController {
             for (User user : selectedUsers) {
                 userIds.add((int) user.getId());
             }
-            String chatName;
+            final String chatNameStr;
             if (selectedUsers.size() > 1) {
-                chatName = searchField.getText();
-                if (chatName == null || chatName.trim().isEmpty()) {
-                    chatName = "Group Chat";
+                String tempName = chatName.getText();
+                if (tempName == null || tempName.trim().isEmpty()) {
+                    chatNameStr = "Group Chat";
+                } else {
+                    chatNameStr = tempName;
                 }
             } else {
-                chatName = selectedUsers.get(0).getUsername();
+                chatNameStr = selectedUsers.get(0).getUsername();
             }
             // Send chat creation request to server
-            com.ouroboros.chatapp.chatapp.clientside.ChatService.createChatGroup(userIds, chatName);
+            new Thread(() -> {
+                ChatService.createChatGroup(userIds, chatNameStr);
+                javafx.application.Platform.runLater(() -> {
+                    com.ouroboros.chatapp.chatapp.ChatView.openChatView(createButton, chatNameStr);
+                });
+            }).start();
         } else {
             System.out.println("No users selected.");
+            Stage stage = (Stage) chatListView.getScene().getWindow();
+            Toast.show(stage, "Please select at least a person to open chat", 4000);
         }
     }
 
@@ -198,6 +210,20 @@ public class HomepageController {
             }
         }
     }
+
+    @FXML
+    public void handleDeleteAccount(ActionEvent actionEvent) {
+        try {
+            com.ouroboros.chatapp.chatapp.clientside.UserService.deleteAccount(loggedInUser.getId());
+            System.out.println("Account deleted successfully.");
+            handleLogout(); // Logout after deletion
+        } catch (Exception e) {
+            System.err.println("Error deleting account: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
 
    /*  @FXML
     private void handleTabChange() {

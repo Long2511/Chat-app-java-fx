@@ -76,7 +76,7 @@ public class LoginController implements Initializable {
             Scene scene = new Scene(loader.load());
 
             // Truyền user vào controller
-             HomepageController controller = loader.getController();
+            HomepageController controller = loader.getController();
             controller.setLoggedInUser(loggedInUser);
 
             Stage stage = (Stage) loginButton.getScene().getWindow();
