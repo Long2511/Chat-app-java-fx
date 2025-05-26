@@ -166,6 +166,8 @@ public class ChatViewController {
                 });
                 System.err.println("Error loading initial messages: " + e.getMessage());
                 e.printStackTrace();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             } finally {
                 // Signal that initial load is complete
                 initialLoadLatch.countDown();
@@ -321,6 +323,8 @@ public class ChatViewController {
                     });
                     System.err.println("Error sending message: " + e.getMessage());
                     e.printStackTrace();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 } finally {
                     // Reset the sending flag regardless of success/failure
                     isSendingMessage.set(false);
@@ -368,6 +372,10 @@ public class ChatViewController {
 
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (Exception e) {
+                System.err.println("Error sending file: " + e.getMessage());
+                Stage stage = (Stage) messageContainer.getScene().getWindow();
+                Toast.show(stage, "Failed to send file: " + e.getMessage(), 4000);
             }
         }
     }
