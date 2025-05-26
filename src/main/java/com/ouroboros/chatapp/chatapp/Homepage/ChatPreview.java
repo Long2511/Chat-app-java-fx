@@ -1,32 +1,26 @@
 package com.ouroboros.chatapp.chatapp.Homepage;
 
 public class ChatPreview {
+    private final int chatId;
+    private final String title;
 
-    private String username;
-    private String lastMessage;
-    private String time;
-
-    public ChatPreview(String username, String lastMessage, String time) {
-        this.username = username;
-        this.lastMessage = lastMessage;
-        this.time = time;
+    public ChatPreview(int chatId, String title) {
+        this.chatId = chatId;
+        this.title = title;
     }
 
-    public String getUsername() {
-        return username;
+    public int getChatId() {
+        return chatId;
     }
 
-    public String getLastMessage() {
-        return lastMessage;
+    public String getTitle() {
+        return title;
     }
 
-    public String getTime() {
-        return time;
-    }
-
-    // Optional: for debug/log
     @Override
     public String toString() {
-        return username + ": " + lastMessage + " (" + time + ")";
+        return title;
     }
 }
+
+
