@@ -3,6 +3,7 @@ package com.ouroboros.chatapp.chatapp.datatype;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Chat {
@@ -11,58 +12,32 @@ public class Chat {
     private String type;
     private String createdAt;
     private String updatedAt;
+    private List<User> participants;
 
     public Chat() {}
 
     public Chat(int chatId, String chatName, List<User> users) {
         this.id = chatId;
         this.name = chatName;
-        this.type = users.size() > 2 ? "GROUP" : "PRIVATE"; // Determine type based on number of users
+        this.type = users.size() > 2 ? "GROUP" : "PRIVATE";
         this.createdAt = java.time.LocalDateTime.now().toString();
-        this.updatedAt = createdAt; // Initially set to created time
+        this.updatedAt = createdAt;
+        this.participants = users;
     }
 
-    // Getters
-    public long getId() {
-        return id;
-    }
+    public long getId() { return id; }
+    public String getName() { return name; }
+    public String getType() { return type; }
+    public String getCreatedAt() { return createdAt; }
+    public String getUpdatedAt() { return updatedAt; }
+    public List<User> getParticipants() { return participants; }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    // Setters
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public void setId(long id) { this.id = id; }
+    public void setName(String name) { this.name = name; }
+    public void setType(String type) { this.type = type; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+    public void setParticipants(List<User> participants) { this.participants = participants; }
 
     public void sendObject(BufferedWriter out) throws IOException {
         out.write("<start of object>\r\n");
@@ -71,6 +46,16 @@ public class Chat {
         out.write("type: " + type + "\r\n");
         out.write("createdAt: " + createdAt + "\r\n");
         out.write("updatedAt: " + updatedAt + "\r\n");
+
+        if (participants != null) {
+            out.write("participants: " + participants.size() + "\r\n");
+            for (User user : participants) {
+                user.sendObject(out);
+            }
+        } else {
+            out.write("participants: 0\r\n");
+        }
+
         out.write("<end of object>\r\n");
     }
 
@@ -79,15 +64,22 @@ public class Chat {
         Chat chat = new Chat();
         while (!(line = in.readLine()).equals("<end of object>")) {
             if (line.startsWith("id: ")) {
-                chat.id = Long.parseLong(line.substring("id: ".length()));
+                chat.setId(Long.parseLong(line.substring("id: ".length())));
             } else if (line.startsWith("name: ")) {
-                chat.name = line.substring("name: ".length());
+                chat.setName(line.substring("name: ".length()));
             } else if (line.startsWith("type: ")) {
-                chat.type = line.substring("type: ".length());
+                chat.setType(line.substring("type: ".length()));
             } else if (line.startsWith("createdAt: ")) {
-                chat.createdAt = line.substring("createdAt: ".length());
+                chat.setCreatedAt(line.substring("createdAt: ".length()));
             } else if (line.startsWith("updatedAt: ")) {
-                chat.updatedAt = line.substring("updatedAt: ".length());
+                chat.setUpdatedAt(line.substring("updatedAt: ".length()));
+            } else if (line.startsWith("participants: ")) {
+                int count = Integer.parseInt(line.substring("participants: ".length()));
+                List<User> participants = new ArrayList<>();
+                for (int i = 0; i < count; i++) {
+                    participants.add(User.receiveObject(in));
+                }
+                chat.setParticipants(participants);
             }
         }
         return chat;
@@ -101,6 +93,7 @@ public class Chat {
                 ", type='" + type + '\'' +
                 ", createdAt='" + createdAt + '\'' +
                 ", updatedAt='" + updatedAt + '\'' +
+                ", participants=" + (participants != null ? participants.size() : "null") +
                 '}';
     }
 }

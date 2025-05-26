@@ -1,5 +1,6 @@
 package com.ouroboros.chatapp.chatapp.Homepage;
 
+import com.ouroboros.chatapp.chatapp.ChatViewController;
 import com.ouroboros.chatapp.chatapp.MessagesViewController;
 import com.ouroboros.chatapp.chatapp.clientside.ChatService;
 import com.ouroboros.chatapp.chatapp.clientside.Toast;
@@ -180,14 +181,25 @@ public class HomepageController {
     List<Chat> chats = ChatService.getAllChats((int) loggedInUser.getId());
 
     List<ChatPreview> previews = chats.stream()
-        .map(chat -> {
-            String title = "GROUP".equals(chat.getType())
-                    ? chat.getName()
-                    : "Chat #" + chat.getId(); // sau này thay bằng tên người đối phương
-            return new ChatPreview((int) chat.getId(), title);
-        })
-        .toList();
+    .map(chat -> {
+        String title;
+        if ("GROUP".equals(chat.getType())) {
+            title = chat.getName() != null && !chat.getName().isBlank()
+                ? chat.getName()
+                : "[Unnamed Group #" + chat.getId() + "]";
+        } else {
+            if (chat.getParticipants() != null && !chat.getParticipants().isEmpty()) {
+                title = chat.getParticipants().get(0).getUsername();
+            } else {
+                title = "Chat with " + chat.getId();
+            }
+        }
+        System.out.println("Debug Chat: id=" + chat.getId() + ", name=" + chat.getName() + ", type=" + chat.getType());
+        return new ChatPreview((int) chat.getId(), title);
+    })
+    .toList();
     System.out.println("Loaded chat previews: " + previews);
+    
     chatListView.setItems(FXCollections.observableArrayList(previews));
 }
 
@@ -201,8 +213,8 @@ public class HomepageController {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
                 AnchorPane chatView = loader.load();
                 //set the chat ID and sender ID in the controller
-                MessagesViewController controller = loader.getController();
-                controller.setChatAndSender(selectedChat.getChatId(), (int) loggedInUser.getId());
+                ChatViewController controller = loader.getController();
+                controller.setChatAndUser(selectedChat.getChatId(), (int) loggedInUser.getId());
 
                 chatViewPane.getChildren().setAll(chatView);
             } catch (IOException e) {
