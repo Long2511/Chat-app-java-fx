@@ -1,7 +1,6 @@
 package com.ouroboros.chatapp.chatapp.Homepage;
 
 import com.ouroboros.chatapp.chatapp.ChatViewController;
-import com.ouroboros.chatapp.chatapp.MessagesViewController;
 import com.ouroboros.chatapp.chatapp.clientside.ChatService;
 import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
