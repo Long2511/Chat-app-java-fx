@@ -1,9 +1,13 @@
 package com.ouroboros.chatapp.chatapp.clientside;
 
 import com.ouroboros.chatapp.chatapp.datatype.Message;
+import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
 
 import java.io.*;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
