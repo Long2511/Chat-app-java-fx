@@ -1,5 +1,6 @@
 package com.ouroboros.chatapp.chatapp.Homepage;
 
+import com.ouroboros.chatapp.chatapp.MessagesViewController;
 import com.ouroboros.chatapp.chatapp.clientside.ChatService;
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.User;
@@ -40,16 +41,30 @@ public class HomepageController {
     public void initialize() {
         // Populate user list and chat previews
         userList.getItems().addAll("user1", "user2", "user3", "user4");
-        chatListView.setCellFactory(listView -> new ChatListCell());
-        chatListView.setItems(FXCollections.observableArrayList(
-                new ChatPreview("Alice", "How are you?", "10:45 AM"),
-                new ChatPreview("Team Chat", "New file uploaded", "09:10 AM")
-        ));
+
+
+        chatListView.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(ChatPreview item, boolean empty) {
+                super.updateItem(item, empty);
+                setText((empty || item == null) ? null : item.getTitle());
+            }
+        });
+
+        
+        // load chat previews when the "Message" tab is selected
+        tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            if ("Your Chats".equals(newTab.getText()) && loggedInUser != null) {
+        loadChatPreviews();
+        }
+    });
+
     }
 
     public void setLoggedInUser(User user) {
         this.loggedInUser = user;
         System.out.println("Logged-in user: " + user.getUsername());
+        loadChatPreviews();
     }
 
     @FXML
@@ -78,13 +93,34 @@ public class HomepageController {
     }
 
     @FXML
+    private void loadChatPreviews() {
+    List<Chat> chats = ChatService.getAllChats(loggedInUser.getId());
+
+    List<ChatPreview> previews = chats.stream()
+        .map(chat -> {
+            String title = "GROUP".equals(chat.getType())
+                    ? chat.getName()
+                    : "Chat #" + chat.getId(); // sau này thay bằng tên người đối phương
+            return new ChatPreview(chat.getId(), title);
+        })
+        .toList();
+    System.out.println("Loaded chat previews: " + previews);
+    chatListView.setItems(FXCollections.observableArrayList(previews));
+}
+
+
+    @FXML
     private void handleChatSelection(MouseEvent event) {
         ChatPreview selectedChat = chatListView.getSelectionModel().getSelectedItem();
         if (selectedChat != null) {
-            System.out.println("Chat selected: " + selectedChat.getUsername());
+            System.out.println("Chat selected: " + selectedChat.getTitle());
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/chat-view.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
                 AnchorPane chatView = loader.load();
+                //set the chat ID and sender ID in the controller
+                MessagesViewController controller = loader.getController();
+                controller.setChatAndSender(selectedChat.getChatId(), loggedInUser.getId());
+
                 chatViewPane.getChildren().setAll(chatView);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -92,16 +128,16 @@ public class HomepageController {
         }
     }
 
-    @FXML
+   /*  @FXML
     private void handleTabChange() {
         Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
         if ("Message".equals(selectedTab.getText())) {
             try {
-                AnchorPane chatView = FXMLLoader.load(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/chat-view.fxml"));
+                AnchorPane chatView = FXMLLoader.load(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
                 chatViewPane.getChildren().setAll(chatView);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 }

@@ -72,7 +72,15 @@ public class LoginController implements Initializable {
         if (loggedInUser != null) {
             welcomeLabel.setText("Login successful!");
             // Navigate to the homepage
-            SceneChanger.changeScene("View/Homepage.fxml");
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/Homepage.fxml"));
+            Scene scene = new Scene(loader.load());
+
+            // Truyền user vào controller
+             HomepageController controller = loader.getController();
+            controller.setLoggedInUser(loggedInUser);
+
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            stage.setScene(scene);
         } else {
             welcomeLabel.setText("Invalid email or password.");
         }

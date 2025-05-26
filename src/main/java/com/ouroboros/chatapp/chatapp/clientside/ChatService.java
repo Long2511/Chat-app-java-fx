@@ -39,11 +39,13 @@ public class ChatService {
             out.flush();
 
             String line;
-            while (!(line = in.readLine()).equals("end: RESPONSE_CHATS")) {
+            System.out.println("Sending request to get all chats for userId = " + userId);
+            while (!(line = in.readLine()).equals("end: RESPONSE_GET_ALL_CHATS")) {
                 if (line.startsWith("length: ")) {
                     int length = Integer.parseInt(line.substring("length: ".length()));
                     for (int i = 0; i < length; i++) {
                         chats.add(Chat.receiveObject(in));
+                        System.out.println("Chat received: " + chats.get(i).getName());
                     }
                 }
             }

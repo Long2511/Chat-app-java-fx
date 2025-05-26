@@ -5,11 +5,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.postgresql.Driver;
+
+import com.ouroboros.chatapp.chatapp.datatype.Chat;
 
 public class DatabaseUtils {
     private static final Map<String, String> ENV_VARS = new HashMap<>();
@@ -78,4 +84,40 @@ public class DatabaseUtils {
             }
         }
     }
+    public static List<Chat> loadChatsForUser(int userId) {
+    List<Chat> userChats = new ArrayList<>();
+    try (Connection conn = getConnection()) {
+        // Query to get chats and their participants
+        String sql = """
+            SELECT c.id AS chat_id, c.name AS chat_name, c.type AS chat_type, cp.user_id 
+            FROM chats c
+            JOIN chat_participants cp ON c.id = cp.chat_id
+            WHERE cp.user_id = ?
+        """;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                   int chatId = rs.getInt("chat_id");
+                    String name = rs.getString("chat_name");
+                    String type = rs.getString("chat_type");
+                    System.out.println("DEBUG: DB row => id=" + chatId + ", name=" + name + ", type=" + type);
+
+                    Chat chat = new Chat();
+                    chat.setId(chatId);
+                    chat.setName(name);
+                    chat.setType(type);
+                    userChats.add(chat);
+                }
+                // Log for debugging
+                //System.out.println("DEBUG: Loaded chat from DB - ID: " + chat.getId() + 
+                                    // ", Name: " + chat.getName());
+                System.out.println("DEBUG: Total chats loaded from DB = " + userChats.size());
+                }
+            }
+        } catch (SQLException e) {
+        System.err.println("Error loading chats: " + e.getMessage());
+    }
+    return userChats;
+}
 }
