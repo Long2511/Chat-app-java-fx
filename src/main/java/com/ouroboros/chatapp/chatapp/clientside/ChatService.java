@@ -83,6 +83,43 @@ public class ChatService {
         return chats;
     }
 
+    public synchronized static Chat createChat(List<User> users, String chatName) {
+        try {
+            out.write("start: CREATE_CHAT\r\n");
+            out.write("name: " + chatName + "\r\n");
+            out.write("users: " + users.size() + "\r\n");
+            for (User user : users) {
+                user.sendObject(out);
+            }
+            out.write("end: CREATE_CHAT\r\n");
+            out.flush();
+
+            // Receive response
+            String line;
+            while (!(line = in.readLine()).equals("end: RESPONSE_CREATE_CHAT")) {
+                if (line.equals("start: RESPONSE_CREATE_CHAT")) {
+                    if (line.startsWith("chatId: ")) {
+                        int chatId = Integer.parseInt(line.substring("chatId: ".length()));
+                        return new Chat(chatId, chatName, users);
+                    }
+                }
+            }
+            return null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Chat getChatById(int chatId, int userId) {
+        List<Chat> allChats = getAllChats(userId);
+        for (Chat chat : allChats) {
+            if (chat.getId() == chatId) {
+                return chat;
+            }
+        }
+        return null;
+    }
+  
     public static Chat getChatDetails(int chatId) {
         try {
             out.write("start: GET_CHAT_DETAILS\r\n");
