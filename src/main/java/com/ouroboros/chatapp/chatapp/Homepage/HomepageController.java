@@ -215,7 +215,7 @@ public class HomepageController {
         if (selectedChat != null) {
             System.out.println("Chat selected: " + selectedChat.getTitle());
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/View/MessagesView.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
                 AnchorPane chatView = loader.load();
                 //set the chat ID and sender ID in the controller
                 ChatViewController controller = loader.getController();
@@ -255,3 +255,4 @@ public class HomepageController {
         }
     }*/
 }
+
