@@ -1,23 +1,23 @@
 package com.ouroboros.chatapp.chatapp;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.control.TextArea;
 import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.Scene;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.scene.control.Alert;
+import javafx.geometry.Insets;
+
+
 
 import java.io.IOException;
 
@@ -111,5 +111,48 @@ public class ChatViewController {
 
                 Toast.show(stage, "Cannot go back", 4000);
             }
+    }
+
+    @FXML
+    private void handleIconClick() {
+        // Create a popup window with emoji icons
+        Stage iconStage = new Stage();
+        GridPane iconGrid = new GridPane();
+        iconGrid.setHgap(10);
+        iconGrid.setVgap(10);
+        iconGrid.setPadding(new Insets(10));
+        iconGrid.setStyle("-fx-background-color: white;");
+
+        // Add some emoji icons
+        String[] emojis = {"😊", "😂", "❤️", "👍", "🎉", "🔥", "👋", "🎈", "⭐", "🌈",
+                "😍", "😎", "🤔", "😢", "😡", "🎂", "🎁", "🎮", "📱", "💻"};
+
+        int col = 0;
+        int row = 0;
+        for (String emoji : emojis) {
+            Button emojiBtn = new Button(emoji);
+            emojiBtn.setStyle("-fx-font-size: 24px; -fx-background-color: transparent; -fx-border-color: transparent;");
+            emojiBtn.setOnAction(e -> {
+                try {
+                    // Add the emoji to the message input
+                    String currentText = messageInput.getText();
+                    messageInput.setText(currentText + emoji);
+                    iconStage.close();
+                } catch (Exception ex) {
+                    System.err.println("Error adding emoji: " + ex.getMessage());
+                }
+            });
+            iconGrid.add(emojiBtn, col, row);
+            col++;
+            if (col > 4) {
+                col = 0;
+                row++;
+            }
+        }
+        Scene scene = new Scene(iconGrid);
+        iconStage.setScene(scene);
+        iconStage.setTitle("Select Emoji");
+        iconStage.initModality(Modality.APPLICATION_MODAL); // Make it modal
+        iconStage.show();
     }
 }
