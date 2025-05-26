@@ -180,14 +180,25 @@ public class HomepageController {
     List<Chat> chats = ChatService.getAllChats((int) loggedInUser.getId());
 
     List<ChatPreview> previews = chats.stream()
-        .map(chat -> {
-            String title = "GROUP".equals(chat.getType())
-                    ? chat.getName()
-                    : "Chat #" + chat.getId(); // sau này thay bằng tên người đối phương
-            return new ChatPreview((int) chat.getId(), title);
-        })
-        .toList();
+    .map(chat -> {
+        String title;
+        if ("GROUP".equals(chat.getType())) {
+            title = chat.getName() != null && !chat.getName().isBlank()
+                ? chat.getName()
+                : "[Unnamed Group #" + chat.getId() + "]";
+        } else {
+            if (chat.getParticipants() != null && !chat.getParticipants().isEmpty()) {
+                title = chat.getParticipants().get(0).getUsername();
+            } else {
+                title = "Chat with " + chat.getId();
+            }
+        }
+        System.out.println("Debug Chat: id=" + chat.getId() + ", name=" + chat.getName() + ", type=" + chat.getType());
+        return new ChatPreview((int) chat.getId(), title);
+    })
+    .toList();
     System.out.println("Loaded chat previews: " + previews);
+    
     chatListView.setItems(FXCollections.observableArrayList(previews));
 }
 

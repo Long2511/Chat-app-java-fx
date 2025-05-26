@@ -143,38 +143,48 @@ public class DatabaseUtils {
         }
     }
     public static List<Chat> loadChatsForUser(int userId) {
-    List<Chat> userChats = new ArrayList<>();
-    try (Connection conn = getConnection()) {
-        // Query to get chats and their participants
-        String sql = """
-            SELECT c.id AS chat_id, c.name AS chat_name, c.type AS chat_type, cp.user_id 
-            FROM chats c
-            JOIN chat_participants cp ON c.id = cp.chat_id
-            WHERE cp.user_id = ?
-        """;
+        List<Chat> userChats = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            // Query to get chats and their participants
+            String sql = """
+                SELECT c.id, c.name, c.type, c.created_at, c.updated_at,
+                   u.id AS participant_id, u.username
+                FROM chats c
+                JOIN chat_participants cp ON cp.chat_id = c.id
+                JOIN users u ON u.id = cp.user_id
+                WHERE c.id IN (SELECT chat_id FROM chat_participants WHERE user_id = ?)
+                ORDER BY c.id, u.id
+                """;    
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
+            stmt.setLong(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
+                Map<Long, Chat> chatMap = new HashMap<>();
                 while (rs.next()) {
-                   int chatId = rs.getInt("chat_id");
-                    String name = rs.getString("chat_name");
-                    String type = rs.getString("chat_type");
-                    System.out.println("DEBUG: DB row => id=" + chatId + ", name=" + name + ", type=" + type);
-
-                    Chat chat = new Chat();
-                    chat.setId(chatId);
-                    chat.setName(name);
-                    chat.setType(type);
-                    userChats.add(chat);
+                    long chatId = rs.getLong("id");
+                    Chat chat = chatMap.get(chatId);
+                    if (chat == null) {
+                        chat = new Chat();
+                        chat.setId(chatId);
+                        chat.setName(rs.getString("name"));
+                        chat.setType(rs.getString("type"));
+                        chat.setCreatedAt(rs.getTimestamp("created_at").toString());
+                        chat.setUpdatedAt(rs.getTimestamp("updated_at").toString());
+                        chat.setParticipants(new ArrayList<>());
+                        chatMap.put(chatId, chat);
+                    }
+                    long pid = rs.getLong("participant_id");
+                    if (pid != userId) {
+                        User u = new User();
+                        u.setId(pid);
+                        u.setUsername(rs.getString("username"));
+                        chat.getParticipants().add(u);
+                    }
                 }
-                // Log for debugging
-                //System.out.println("DEBUG: Loaded chat from DB - ID: " + chat.getId() + 
-                                    // ", Name: " + chat.getName());
-                System.out.println("DEBUG: Total chats loaded from DB = " + userChats.size());
-                }
+                userChats.addAll(chatMap.values());
             }
-        } catch (SQLException e) {
-        System.err.println("Error loading chats: " + e.getMessage());
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
     return userChats;
 }
