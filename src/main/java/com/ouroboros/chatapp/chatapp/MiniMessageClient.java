@@ -1,25 +1,33 @@
 package com.ouroboros.chatapp.chatapp;
 
 import com.ouroboros.chatapp.chatapp.datatype.Message;
+import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
 import com.ouroboros.chatapp.chatapp.serverside.MessageHandler;
 
 import java.time.LocalDateTime;          // import LocalDateTime
 
 public class MiniMessageClient {
     public static void main(String[] args) {
+        int testChatId = 1;
+        int testSenderId = 83;
+
         Message msg = new Message();
-        msg.setChatId(1);
-        msg.setSenderId(83);
-        msg.setContent("Hello from mini-client!");
-        msg.setMessageType("text");
+        msg.setChatId(testChatId);
+        msg.setSenderId(testSenderId);
+        msg.setMessageType(Message.TYPE_FILE);
+        msg.setContent("uploads/test-file.pdf");
+        msg.setCreatedAt(LocalDateTime.now());
+        msg.setUpdatedAt(msg.getCreatedAt());
 
-        LocalDateTime now = LocalDateTime.now();   // chỉ khai báo 1 lần
-        msg.setCreatedAt(now);
-        msg.setUpdatedAt(now);
-
-        MessageHandler.saveMessageToDatabase(msg);
-
-        System.out.println("Inserted – kiểm tra bảng messages xem đã có bản ghi!");
-        com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils.closeConnection();
+        // Lưu thử vào DB
+        try {
+            MessageHandler.saveMessageToDatabase(msg);
+            System.out.println("Inserted message into DB: " + msg.getContent());
+        } catch (Exception e) {
+            System.err.println("Failed to insert message: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            DatabaseUtils.closeConnection();
+        }
     }
 }

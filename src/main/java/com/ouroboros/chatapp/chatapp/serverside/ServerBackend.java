@@ -1,5 +1,6 @@
 package com.ouroboros.chatapp.chatapp.serverside;
 
+
 import com.ouroboros.chatapp.chatapp.datatype.Message;
 import com.ouroboros.chatapp.chatapp.datatype.STATUS;
 import com.ouroboros.chatapp.chatapp.datatype.User;
@@ -168,6 +169,18 @@ public class ServerBackend {
                     clientUserId = -1;
 
                     System.out.println("Logout request");
+                } else if (line.equals("start: FORGOT_PASSWORD")) {
+                    String email = null;
+                    String newPassword = null;
+                    while (!(line = in.readLine()).equals("end: FORGOT_PASSWORD")) {
+                        if (line.startsWith("email: ")) {
+                            email = line.substring("email: ".length());
+                        } else if (line.startsWith("newPassword: ")) {
+                            newPassword = line.substring("newPassword: ".length());
+                        }
+                    }
+                    PrintWriter pw = new PrintWriter(out, true);
+                    com.ouroboros.chatapp.chatapp.serverside.UserHandler.handleForgotPassword(email, newPassword, pw);
                 } else if (ChatHandler.isCreateChatRequest(line)) {
                     ChatHandler.handleCreateChatRequest(in, out);
                 } else if (ChatHandler.isGetChatsRequest(line)) {
@@ -200,6 +213,7 @@ public class ServerBackend {
 
     private static void handleSendMessage(BufferedReader in, BufferedWriter out) {
         Logger logger = Logger.getLogger(ServerBackend.class.getName());
+
         try {
             int chatId = -1;
             int senderId = -1;
@@ -212,6 +226,8 @@ public class ServerBackend {
                     chatId = Integer.parseInt(line.substring("chatId: ".length()));
                 } else if (line.startsWith("senderId: ")) {
                     senderId = Integer.parseInt(line.substring("senderId: ".length()));
+                } else if (line.startsWith("messageType: ")) {
+                    type = line.substring("messageType: ".length()).toUpperCase();
                 } else if (line.startsWith("content: ")) {
                     content = line.substring("content: ".length());
                 }
@@ -224,6 +240,7 @@ public class ServerBackend {
                 // Handle sending the message
                 MessageHandler.handleSendMessage(chatId, senderId, content, out);
             }
+
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error handling SEND_MESSAGE", e);
         }
@@ -239,3 +256,5 @@ public class ServerBackend {
         }
     }
 }
+
+

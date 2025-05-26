@@ -61,3 +61,10 @@
     -fx-font-size: 14px;
     -fx-font-weight: bold;
 }
+
+#forgotPasswordButton {
+    -fx-background-color: transparent;
+    -fx-text-fill: #007BFF; /* Blue for the Register button */
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}

@@ -91,4 +91,9 @@ public class LoginController implements Initializable {
     protected void onRegisterButtonClick() throws IOException {
         SceneChanger.changeScene("View/RegisterView.fxml");
     }
+
+       @FXML
+    protected void onForgotPasswordButtonClick() throws IOException {
+        SceneChanger.changeScene("View/ForgotPassword.fxml");
+    }
 }

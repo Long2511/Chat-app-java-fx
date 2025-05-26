@@ -48,6 +48,39 @@ public class AuthHandler {
         }
     }
 
+    public static STATUS RequestForgotPassword(String email, String newPassword) {
+        try (Connection conn = DatabaseUtils.getConnection()) {
+            // Check if email exists
+            try (PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE email = ?")) {
+                checkStmt.setString(1, email);
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) == 0) {
+                    System.out.println("Forgot password failed: Email " + email + " does not exist");
+                    return STATUS.FAILURE; // Email does not exist
+                }
+            }
+            // Hash the new password
+            String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+            // Update password
+            try (PreparedStatement updateStmt = conn.prepareStatement(
+                    "UPDATE users SET password = ? WHERE email = ?")) {
+                updateStmt.setString(1, hashedPassword);
+                updateStmt.setString(2, email);
+                int updated = updateStmt.executeUpdate();
+                if (updated > 0) {
+                    System.out.println("Password reset successful for email: " + email);
+                    return STATUS.SUCCESS;
+                } else {
+                    System.out.println("Password reset failed for email: " + email);
+                    return STATUS.FAILURE;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error during password reset: " + e.getMessage());
+            return STATUS.FAILURE;
+        }
+    }
+
     public static User authenticateUser(String email, String password) throws SQLException {
         try (Connection conn = DatabaseUtils.getConnection()) {
             // Check if email exists and retrieve user details
