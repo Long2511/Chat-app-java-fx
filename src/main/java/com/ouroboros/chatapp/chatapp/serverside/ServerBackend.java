@@ -10,12 +10,15 @@ import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 public class ServerBackend {
     private static final int PORT = 8080;
+
+    public static Map<BufferedWriter, Long> clientWriters = Collections.synchronizedMap(new HashMap<>());
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(PORT);
@@ -43,6 +46,7 @@ public class ServerBackend {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
 
+            long clientUserId = -1; // Initialize client user ID
             // Look for the start marker and determine the object type
             String line;
             while (true) {
@@ -99,6 +103,9 @@ public class ServerBackend {
                         user = AuthHandler.RequestLogin(email, password);
                     }
                     if (user != null) {
+                        clientUserId = user.getId(); // Set the client user ID
+                        clientWriters.put(out, clientUserId); // Store the writer with user ID
+
                         System.out.println("Login successful for: " + email);
                         out.write("start: AUTH_RESPONSE\r\n");
                         out.write("status: SUCCESS\r\n");
@@ -152,12 +159,23 @@ public class ServerBackend {
                     while (!(line = in.readLine()).equals("end: LOGOUT")) {
                         // No parameters needed for logout
                     }
+                    clientWriters.remove(out, clientUserId); // Remove the writer from the map
+                    clientUserId = -1;
 
                     System.out.println("Logout request");
                 } else if (ChatHandler.isCreateChatRequest(line)) {
                     ChatHandler.handleCreateChatRequest(in, out);
                 } else if (ChatHandler.isGetChatsRequest(line)) {
                     ChatHandler.handleGetChatsRequest(in, out);
+                } else if (line.equals("start: DELETE_ACCOUNT")) {
+                    while (!(line = in.readLine()).equals("end: DELETE_ACCOUNT")) {
+                        if (line.startsWith("userId: ")) {
+                            int userId = Integer.parseInt(line.substring("userId: ".length()));
+                            clientWriters.remove(out, (long) userId);
+                            UserHandler.deleteAccount(userId);
+                        }
+                    }
+                    System.out.println("Delete account request");
                 }
             }
 
