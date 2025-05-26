@@ -1,7 +1,6 @@
 package com.ouroboros.chatapp.chatapp;
 
 import com.ouroboros.chatapp.chatapp.Homepage.HomepageController;
-import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import com.ouroboros.chatapp.chatapp.clientside.UserService;
 import com.ouroboros.chatapp.chatapp.datatype.User;
 import javafx.application.Platform;
@@ -93,7 +92,7 @@ public class LoginController implements Initializable {
         SceneChanger.changeScene("View/RegisterView.fxml");
     }
 
-    @FXML
+       @FXML
     protected void onForgotPasswordButtonClick() throws IOException {
         SceneChanger.changeScene("View/ForgotPassword.fxml");
     }
