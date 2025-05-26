@@ -55,5 +55,13 @@ public class UserHandler {
             e.printStackTrace();
         }
     }
+
+    public static void handleForgotPassword(String email, String newPassword, PrintWriter out) {
+        var status = com.ouroboros.chatapp.chatapp.serverside.AuthHandler.RequestForgotPassword(email, newPassword);
+        out.println("start: FORGOT_PASSWORD_RESPONSE");
+        out.println("status: " + (status == com.ouroboros.chatapp.chatapp.datatype.STATUS.SUCCESS ? "SUCCESS" : "FAILURE"));
+        out.println("end: FORGOT_PASSWORD_RESPONSE");
+        out.flush();
+    }
 }
 

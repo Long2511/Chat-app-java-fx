@@ -11,7 +11,7 @@
             <PasswordField fx:id="passwordField" onAction="#onLoginButtonClick" promptText="Password" />
             <Button fx:id="loginButton" onAction="#onLoginButtonClick" styleClass="loginButton" text="Login" />
             <HBox fx:id="registerPromptBox" alignment="CENTER" spacing="5.0">
-                <Label fx:id="registerPromptLabel" text="Don't have an account?" />
+            <Button fx:id="forgotPasswordButton" layoutX="97.0" layoutY="10.0" onAction="#onForgotPasswordButtonClick" text="Forgot Password?" />
                 <Button fx:id="registerButton" onAction="#onRegisterButtonClick" text="Register here" />
             </HBox>
         </VBox>

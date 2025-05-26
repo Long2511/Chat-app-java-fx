@@ -154,6 +154,18 @@ public class ServerBackend {
                     }
 
                     System.out.println("Logout request");
+                } else if (line.equals("start: FORGOT_PASSWORD")) {
+                    String email = null;
+                    String newPassword = null;
+                    while (!(line = in.readLine()).equals("end: FORGOT_PASSWORD")) {
+                        if (line.startsWith("email: ")) {
+                            email = line.substring("email: ".length());
+                        } else if (line.startsWith("newPassword: ")) {
+                            newPassword = line.substring("newPassword: ".length());
+                        }
+                    }
+                    PrintWriter pw = new PrintWriter(out, true);
+                    com.ouroboros.chatapp.chatapp.serverside.UserHandler.handleForgotPassword(email, newPassword, pw);
                 } else if (ChatHandler.isCreateChatRequest(line)) {
                     ChatHandler.handleCreateChatRequest(in, out);
                 } else if (ChatHandler.isGetChatsRequest(line)) {

@@ -199,4 +199,27 @@ public class UserService {
             return STATUS.FAILURE;
         }
     }
+
+
+    public static boolean forgotPassword(String email, String newPassword) {
+        try {
+            BufferedWriter out = ClientConnection.getSharedWriter();
+            BufferedReader in = ClientConnection.getSharedReader();
+            out.write("start: FORGOT_PASSWORD\r\n");
+            out.write("email: " + email + "\r\n");
+            out.write("newPassword: " + newPassword + "\r\n");
+            out.write("end: FORGOT_PASSWORD\r\n");
+            out.flush();
+            String line;
+            while (!(line = in.readLine()).equals("end: FORGOT_PASSWORD_RESPONSE")) {
+                if (line.startsWith("status: ")) {
+                    String status = line.substring("status: ".length());
+                    return status.equals("SUCCESS");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
