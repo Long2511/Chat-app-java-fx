@@ -90,7 +90,6 @@ public class MessageHandler {
                 newMsg.setSenderId(senderId);
                 newMsg.setContent(content);
                 newMsg.setMessageType("TEXT");
-
                 LocalDateTime now = LocalDateTime.now();
                 newMsg.setCreatedAt(now);
                 newMsg.setUpdatedAt(now);
@@ -112,14 +111,16 @@ public class MessageHandler {
 
                 /// Handle realtime update message
                 // sent notify to other clients in the chat
-                for (int userIdInChat : chatUsersMap.get(chatId)) {
-                    if (userIdInChat != senderId) { // Don't notify the sender
-                        for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
-                            userOut.write("start: ADD_NEW_MESSAGE\r\n");
-                            userOut.write("length: 1\r\n");
-                            newMsg.sendObject(userOut);
-                            userOut.write("end: ADD_NEW_MESSAGE\r\n");
-                            userOut.flush();
+                if (chatUsersMap.get(chatId) != null) {
+                    for (int userIdInChat : chatUsersMap.get(chatId)) {
+                        if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
+                            for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
+                                userOut.write("start: ADD_NEW_MESSAGE\r\n");
+                                userOut.write("length: 1\r\n");
+                                newMsg.sendObject(userOut);
+                                userOut.write("end: ADD_NEW_MESSAGE\r\n");
+                                userOut.flush();
+                            }
                         }
                     }
                 }

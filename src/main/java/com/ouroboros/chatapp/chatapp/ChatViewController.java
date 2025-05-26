@@ -81,8 +81,6 @@ public class ChatViewController {
     @FXML
     private Button backButton;
 
-    private User currentUser;
-    private int chatId;
     private MessageService messageService;
 
     // Thread for message updates
@@ -134,7 +132,7 @@ public class ChatViewController {
     }
 
     public void loadChatMessages(int chatId) {
-        this.chatId = chatId;
+        this.currentChatId = chatId;
 
         // Initialize the latch for synchronization
         initialLoadLatch = new CountDownLatch(1);
@@ -150,7 +148,7 @@ public class ChatViewController {
                 Platform.runLater(() -> {
                     messageContainer.getChildren().clear();
                     for (Message message : messages) {
-                        boolean isFromCurrentUser = message.getSenderId() == currentUser.getId();
+                        boolean isFromCurrentUser = message.getSenderId() == currentUserId;
                         addMessage(message.getContent(), isFromCurrentUser);
                     }
 
@@ -189,7 +187,7 @@ public class ChatViewController {
                 // Wait for initial load to complete before starting
                 initialLoadLatch.await();
 
-                System.out.println("Message listener thread started for chat ID: " + chatId);
+                System.out.println("Message listener thread started for chat ID: " + currentChatId);
 
                 while (isUpdateRunning.get() && !Thread.currentThread().isInterrupted()) {
                     try {
@@ -213,7 +211,7 @@ public class ChatViewController {
                             if (line != null && line.equals("start: ADD_NEW_MESSAGE")) {
                                 Message newMessage = null;
 
-                                System.out.println("Received new message marker for chat ID: " + chatId);
+                                System.out.println("Received new message marker for chat ID: " + currentChatId);
 
                                 // Process the message marker
                                 while (!(line = reader.readLine()).equals("end: ADD_NEW_MESSAGE")) {
@@ -228,10 +226,10 @@ public class ChatViewController {
                                 System.out.println("message content: " + (newMessage != null ? newMessage.getContent() : "null"));
 
                                 // If the message is for our chat, display it
-                                if (newMessage != null && newMessage.getChatId() == chatId) {
+                                if (newMessage != null && newMessage.getChatId() == currentChatId) {
                                     final Message displayMessage = newMessage;
                                     Platform.runLater(() -> {
-                                        boolean isFromCurrentUser = displayMessage.getSenderId() == currentUser.getId();
+                                        boolean isFromCurrentUser = displayMessage.getSenderId() == currentUserId;
                                         addMessage(displayMessage.getContent(), isFromCurrentUser);
                                         // Scroll to bottom
                                         messageScroll.setVvalue(1.0);
@@ -260,7 +258,7 @@ public class ChatViewController {
                 // Thread was interrupted while waiting for the latch
                 System.out.println("Message listener thread interrupted while waiting for initial load");
             } finally {
-                System.out.println("Message listener thread stopped for chat ID: " + chatId);
+                System.out.println("Message listener thread stopped for chat ID: " + currentChatId);
             }
         });
 
@@ -287,7 +285,7 @@ public class ChatViewController {
                 System.err.println("Interrupted while waiting for message listener thread to stop");
             }
 
-            System.out.println("Message listener thread stopped for chat ID: " + chatId);
+            System.out.println("Message listener thread stopped for chat ID: " + currentChatId);
             messageListenerThread = null;
         }
     }
@@ -307,7 +305,7 @@ public class ChatViewController {
             CompletableFuture.runAsync(() -> {
                 try {
                     System.out.println("Sending message: " + messageToBeSent);
-                    messageService.sendMessage(chatId, (int) currentUser.getId(), messageToBeSent);
+                    messageService.sendMessage(currentChatId, currentUserId, messageToBeSent);
 
                     // Update UI with the sent message - we don't need to wait for server confirmation
                     Platform.runLater(() -> {
@@ -374,8 +372,8 @@ public class ChatViewController {
         }
     }
     public void setChatAndUser(int chatId, int userId) {
-        this.currentChatId = chatId;
         this.currentUserId = userId;
+        setChatId(chatId);
     }
 
     public void addMessage(String message, boolean isFromCurrentUser) {
@@ -406,11 +404,11 @@ public class ChatViewController {
     }
 
     public void setCurrentUser(User currentUser) {
-        this.currentUser = currentUser;
+        this.currentUserId = (int) currentUser.getId();
     }
 
     public void setChatId(int chatId) {
-        this.chatId = chatId;
+        this.currentChatId = chatId;
         // Load messages when chat ID is set
         loadChatMessages(chatId);
     }
