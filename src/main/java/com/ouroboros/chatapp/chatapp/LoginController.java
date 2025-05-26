@@ -4,6 +4,7 @@ import com.ouroboros.chatapp.chatapp.Homepage.HomepageController;
 import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import com.ouroboros.chatapp.chatapp.clientside.UserService;
 import com.ouroboros.chatapp.chatapp.datatype.User;
+import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

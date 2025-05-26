@@ -219,7 +219,8 @@ public class ServerBackend {
             int senderId = -1;
             String content = null;
             String type = "TEXT"; // Default message type
-
+            String fileUrl = null;
+            String mediaUrl = null;
             String line;
             while (!(line = in.readLine()).equals("end: SEND_MESSAGE")) {
                 if (line.startsWith("chatId: ")) {
@@ -230,15 +231,21 @@ public class ServerBackend {
                     type = line.substring("messageType: ".length()).toUpperCase();
                 } else if (line.startsWith("content: ")) {
                     content = line.substring("content: ".length());
+                } else if (line.startsWith("fileUrl: ")) {
+                    fileUrl = line.substring("fileUrl: ".length());
+                } else if (line.startsWith("mediaUrl: ")) {
+                    mediaUrl = line.substring("mediaUrl: ".length());
                 }
             }
             System.out.println("senderId: " + senderId);
             System.out.println("chatId: " + chatId);
             System.out.println("content: " + content);
+            System.out.println("fileUrl: " + fileUrl);
+            System.out.println("mediaUrl: " + mediaUrl);
 
             if (chatId != -1 && senderId != -1 && content != null) {
-                // Handle sending the message
-                MessageHandler.handleSendMessage(chatId, senderId, content, type, out);
+                // Handle sending the message (pass fileUrl/mediaUrl)
+                MessageHandler.handleSendMessage(chatId, senderId, content, type, fileUrl, mediaUrl, out);
             }
 
         } catch (Exception e) {

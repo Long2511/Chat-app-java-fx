@@ -72,7 +72,8 @@
                             </padding>
                             <children>
                                 <Label text="Select a chat to view messages" />
-                                <ListView fx:id="chatListView" fixedCellSize="40" onMouseClicked="#handleChatSelection" prefHeight="520.0" />
+                                <ListView fx:id="chatListView" fixedCellSize="40" onMouseClicked="#handleChatSelection" prefHeight="200.0" />
+                                <AnchorPane fx:id="chatViewPane" prefHeight="320.0" prefWidth="580.0" />
                             </children>
                         </VBox>
                     </content>

@@ -14,6 +14,8 @@ public class Message {
     private String messageType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String fileUrl;
+    private String mediaUrl;
 
     public static final String TYPE_FILE  = "FILE";
 
@@ -46,6 +48,14 @@ public class Message {
         return updatedAt;
     }
 
+    public String getFileUrl() {
+        return fileUrl;
+    }
+
+    public String getMediaUrl() {
+        return mediaUrl;
+    }
+
     // Setters
     public void setId(int id) {
         this.id = id;
@@ -71,6 +81,12 @@ public class Message {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+    public void setMediaUrl(String mediaUrl) {
+        this.mediaUrl = mediaUrl;
+    }
 
     public void sendObject(BufferedWriter out) throws IOException {
         out.write("<start of object>\r\n");
@@ -79,6 +95,8 @@ public class Message {
         out.write("chatId: " + chatId + "\r\n");
         out.write("content: " + content + "\r\n");
         out.write("messageType: " + messageType + "\r\n");
+        out.write("fileUrl: " + (fileUrl != null ? fileUrl : "") + "\r\n");
+        out.write("mediaUrl: " + (mediaUrl != null ? mediaUrl : "") + "\r\n");
         out.write("createdAt: " + createdAt + "\r\n");
         out.write("updatedAt: " + updatedAt + "\r\n");
         out.write("<end of object>\r\n");
@@ -98,6 +116,10 @@ public class Message {
                 message.content = line.substring("content: ".length());
             } else if (line.startsWith("messageType: ")) {
                 message.messageType = line.substring("messageType: ".length());
+            } else if (line.startsWith("fileUrl: ")) {
+                message.fileUrl = line.substring("fileUrl: ".length());
+            } else if (line.startsWith("mediaUrl: ")) {
+                message.mediaUrl = line.substring("mediaUrl: ".length());
             } else if (line.startsWith("createdAt: ")) {
                 message.createdAt = LocalDateTime.parse(line.substring("createdAt: ".length()));
             } else if (line.startsWith("updatedAt: ")) {
@@ -113,6 +135,8 @@ public class Message {
         System.out.println("Chat ID: " + chatId);
         System.out.println("Content: " + content);
         System.out.println("Message Type: " + messageType);
+        System.out.println("File URL: " + fileUrl);
+        System.out.println("Media URL: " + mediaUrl);
         System.out.println("Created At: " + createdAt);
         System.out.println("Updated At: " + updatedAt);
     }
