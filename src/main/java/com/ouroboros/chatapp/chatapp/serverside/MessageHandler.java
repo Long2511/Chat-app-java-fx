@@ -53,6 +53,7 @@ public class MessageHandler {
         synchronized (messages) {
             try {
                 long length = messages.stream().filter(m -> m.getChatId() == chatId).count();
+                System.out.println("Length of messages for chat ID " + chatId + ": " + length);
 
                 out.write("start: RESPONSE_MESSAGES\r\n");
                 out.write("length: " + length + "\r\n");
@@ -60,6 +61,7 @@ public class MessageHandler {
                     if (msg.getChatId() == chatId) {
                         msg.sendObject(out);
                     }
+                    System.out.println("message content: " + msg.getContent());
                 }
                 out.write("end: RESPONSE_MESSAGES\r\n");
                 out.flush();
