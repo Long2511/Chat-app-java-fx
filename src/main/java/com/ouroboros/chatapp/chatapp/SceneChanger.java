@@ -14,8 +14,14 @@ public class SceneChanger {
     }
 
     public static void changeScene(String fxml) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(SceneChanger.class.getResource(fxml));
-        Scene scene = new Scene(fxmlLoader.load());
-        primaryStage.setScene(scene);
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(SceneChanger.class.getResource(fxml));
+            Scene scene = new Scene(fxmlLoader.load());
+            primaryStage.setScene(scene);
+        } catch (Exception e) {
+            System.out.println("Error loading FXML file: " + e.getMessage());
+        }
+
     }
+
 }
