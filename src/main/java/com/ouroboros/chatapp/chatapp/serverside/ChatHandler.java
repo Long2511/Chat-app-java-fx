@@ -8,9 +8,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class ChatHandler {
     public static final List<Chat> chats = Collections.synchronizedList(new ArrayList<>());
@@ -50,6 +53,30 @@ public class ChatHandler {
             out.write("end: RESPONSE_CREATE_CHAT\r\n");
             out.flush();
             return;
+        }
+        
+        // Check if PRIVATE chat with exact same 2 users already exists
+        if (userIds.size() == 2) {
+            List<Chat> existing = DatabaseUtils.loadChatsForUser(userIds.get(0));
+            for (Chat chat : existing) {
+                if ("PRIVATE".equals(chat.getType())) {
+                    List<Integer> participantIds = chat.getParticipants().stream()
+                            .map(user -> (int) user.getId())
+                            .collect(Collectors.toList());
+                    participantIds.add(userIds.get(0)); // add self to the list
+
+                    Set<Integer> existingSet = new HashSet<>(participantIds);
+                    Set<Integer> newSet = new HashSet<>(userIds);
+                    if (existingSet.equals(newSet)) {
+                        out.write("start: RESPONSE_CREATE_CHAT\r\n");
+                        out.write("status: EXISTING\r\n");
+                        out.write("chatId: " + chat.getId() + "\r\n");
+                        out.write("end: RESPONSE_CREATE_CHAT\r\n");
+                        out.flush();
+                        return;
+                    }
+                }
+            }
         }
 
         // Create a new chat object (no id yet)
