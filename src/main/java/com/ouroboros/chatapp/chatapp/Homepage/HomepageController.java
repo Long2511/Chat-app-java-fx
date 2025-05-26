@@ -124,7 +124,6 @@ public class HomepageController {
     public void setLoggedInUser(User user) {
         this.loggedInUser = user;
         System.out.println("Logged-in user: " + user.getUsername());
-        loadChatPreviews();
     }
 
     @FXML
@@ -166,14 +165,14 @@ public class HomepageController {
 
     @FXML
     private void loadChatPreviews() {
-    List<Chat> chats = ChatService.getAllChats(loggedInUser.getId());
+    List<Chat> chats = ChatService.getAllChats((int) loggedInUser.getId());
 
     List<ChatPreview> previews = chats.stream()
         .map(chat -> {
             String title = "GROUP".equals(chat.getType())
                     ? chat.getName()
                     : "Chat #" + chat.getId(); // sau này thay bằng tên người đối phương
-            return new ChatPreview(chat.getId(), title);
+            return new ChatPreview((int) chat.getId(), title);
         })
         .toList();
     System.out.println("Loaded chat previews: " + previews);
@@ -191,7 +190,7 @@ public class HomepageController {
                 AnchorPane chatView = loader.load();
                 //set the chat ID and sender ID in the controller
                 MessagesViewController controller = loader.getController();
-                controller.setChatAndSender(selectedChat.getChatId(), loggedInUser.getId());
+                controller.setChatAndSender(selectedChat.getChatId(), (int) loggedInUser.getId());
 
                 chatViewPane.getChildren().setAll(chatView);
             } catch (IOException e) {

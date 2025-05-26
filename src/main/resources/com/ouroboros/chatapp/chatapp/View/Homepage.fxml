@@ -15,12 +15,10 @@
 
 <AnchorPane prefHeight="640.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ouroboros.chatapp.chatapp.Homepage.HomepageController">
     <children>
-        <TabPane fx:id="tabPane" layoutX="10.0" layoutY="10.0" prefHeight="480.0" prefWidth="580.0"
-         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-         AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <TabPane fx:id="tabPane" layoutX="10.0" layoutY="10.0" prefHeight="480.0" prefWidth="580.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <tabs>
                 <!-- Tab 1: Create Chat -->
-                <Tab text="Create Chat" closable="false">
+                <Tab closable="false" text="Create Chat">
                     <content>
                         <VBox spacing="10.0">
                             <padding>
@@ -59,7 +57,7 @@
                 </Tab>
 
                 <!-- Tab 2: Message (placeholder) -->
-                <Tab text="Your Chats" closable="false">
+                <Tab fx:id="yourChatTab" closable="false" text="Your Chats">
                     <content>
                         <VBox spacing="10.0">
                             <padding>
@@ -67,7 +65,7 @@
                             </padding>
                             <children>
                                 <Label text="Select a chat to view messages" />
-                                <ListView fx:id="chatListView" prefHeight="520.0" fixedCellSize="40" onMouseClicked="#handleChatSelection" />
+                                <ListView fx:id="chatListView" fixedCellSize="40" onMouseClicked="#handleChatSelection" prefHeight="520.0" />
                             </children>
                         </VBox>
                     </content>
