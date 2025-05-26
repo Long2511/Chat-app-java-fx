@@ -55,7 +55,7 @@ public class ChatHandler {
         Chat newChat = new Chat();
         newChat.setId(chatId);
         newChat.setName(chatName);
-        newChat.setType(userIds.size() > 2 ? "GROUP" : "PRIVATE");
+        newChat.setType(userIds.size() > 1 ? "group" : "direct");
 
         if (!chatUsersMap.containsKey(chatId)) {
             chatUsersMap.put(chatId, new ArrayList<>());
