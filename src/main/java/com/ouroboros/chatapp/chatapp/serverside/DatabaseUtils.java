@@ -89,6 +89,34 @@ public class DatabaseUtils {
         }
         return chatId;
     }
+    
+    // Finds an existing private chat between two users
+    public static Long findExistingPrivateChat(List<Integer> userIds) {
+        if (userIds.size() != 2) return null;
+        String sql = """
+            SELECT chat_id
+            FROM chat_participants
+            WHERE user_id = ? OR user_id = ?
+            GROUP BY chat_id
+            HAVING COUNT(*) = 2 AND
+               EVERY(user_id = ? OR user_id = ?) AND
+               (SELECT type FROM chats WHERE id = chat_id) = 'PRIVATE'
+            LIMIT 1
+        """;
+        try (Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userIds.get(0));
+            stmt.setInt(2, userIds.get(1));
+            stmt.setInt(3, userIds.get(0));
+            stmt.setInt(4, userIds.get(1));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getLong("chat_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     private static void loadEnvVars() throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(ENV_FILE))) {
