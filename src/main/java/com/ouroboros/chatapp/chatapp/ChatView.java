@@ -1,5 +1,6 @@
 package com.ouroboros.chatapp.chatapp;
 
+import com.ouroboros.chatapp.chatapp.datatype.User;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -37,18 +38,20 @@ public class ChatView extends Application {
         }
     }
 
-    public static void openChatView(javafx.scene.Node anyNode, String chatNameStr) {
+    public static void openChatView(javafx.scene.Node anyNode, String chatNameStr, User user, int chatId) {
         try {
             FXMLLoader loader = new FXMLLoader(ChatView.class.getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
             Parent chatView = loader.load();
             ChatViewController controller = loader.getController();
             controller.setChatTitle(chatNameStr);
+            controller.setCurrentUser(user);
+            controller.setChatId(chatId);
             // Switch the whole scene
             Stage stage = (Stage) anyNode.getScene().getWindow();
             stage.setScene(new Scene(chatView));
         } catch (IOException e) {
             e.printStackTrace();
-            }
+        }
     }
 
     public static void main(String[] args) {

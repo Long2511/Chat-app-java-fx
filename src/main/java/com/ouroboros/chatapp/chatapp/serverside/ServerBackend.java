@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 public class ServerBackend {
     private static final int PORT = 8080;
 
-    public static Map<BufferedWriter, Long> clientWriters = Collections.synchronizedMap(new HashMap<>());
+    public static Map<Long, List<BufferedWriter>> clientWriters = Collections.synchronizedMap(new HashMap<>());
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(PORT);
@@ -34,6 +34,9 @@ public class ServerBackend {
             logger.log(Level.SEVERE, "Database connection failed", e);
             System.exit(1);
         }
+
+        // Fetch initial data from the database
+        MessageHandler.fetchDataFromDatabase();
 
         while (true) {
             Socket clientSocket = serverSocket.accept();
@@ -105,7 +108,8 @@ public class ServerBackend {
                     }
                     if (user != null) {
                         clientUserId = user.getId(); // Set the client user ID
-                        clientWriters.put(out, clientUserId); // Store the writer with user ID
+                        // Add the writer to the map with user ID as key
+                        clientWriters.computeIfAbsent((long) clientUserId, k -> new ArrayList<>()).add(out);
 
                         System.out.println("Login successful for: " + email);
                         out.write("start: AUTH_RESPONSE\r\n");
@@ -160,7 +164,8 @@ public class ServerBackend {
                     while (!(line = in.readLine()).equals("end: LOGOUT")) {
                         // No parameters needed for logout
                     }
-                    clientWriters.remove(out, clientUserId); // Remove the writer from the map
+
+                    removeClientWriter(clientUserId, out);
                     clientUserId = -1;
 
                     System.out.println("Logout request");
@@ -184,7 +189,10 @@ public class ServerBackend {
                     while (!(line = in.readLine()).equals("end: DELETE_ACCOUNT")) {
                         if (line.startsWith("userId: ")) {
                             int userId = Integer.parseInt(line.substring("userId: ".length()));
-                            clientWriters.remove(out, (long) userId);
+
+                            removeClientWriter(userId, out);
+                            clientUserId = -1;
+
                             UserHandler.deleteAccount(userId);
                         }
                     }
@@ -224,29 +232,27 @@ public class ServerBackend {
                     content = line.substring("content: ".length());
                 }
             }
+            System.out.println("senderId: " + senderId);
+            System.out.println("chatId: " + chatId);
+            System.out.println("content: " + content);
 
             if (chatId != -1 && senderId != -1 && content != null) {
-                Message message = new Message();
-                message.setChatId(chatId);
-                message.setSenderId(senderId);
-                message.setContent(content);
-                message.setMessageType(type);
-                java.time.LocalDateTime now = java.time.LocalDateTime.now();
-                message.setCreatedAt(now);
-                message.setUpdatedAt(now);
-
-                System.out.println("[SERVER] Received message: type=" + type + ", content=" + content);
-
-                MessageHandler.saveMessageToDatabase(message);
-                System.out.println("[SERVER] Message saved to DB");
-
+                // Handle sending the message
                 MessageHandler.handleSendMessage(chatId, senderId, content, out);
-            } else {
-                System.err.println("[SERVER] Incomplete message. One or more fields missing.");
             }
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error handling SEND_MESSAGE", e);
+        }
+    }
+
+    private static void removeClientWriter(long userId, BufferedWriter writer) {
+        List<BufferedWriter> writers = clientWriters.get(userId);
+        if (writers != null) {
+            writers.remove(writer);
+            if (writers.isEmpty()) {
+                clientWriters.remove(userId);
+            }
         }
     }
 }

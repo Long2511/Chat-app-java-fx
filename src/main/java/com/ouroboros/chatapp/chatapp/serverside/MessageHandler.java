@@ -5,23 +5,53 @@ import com.ouroboros.chatapp.chatapp.serverside.DatabaseUtils;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.ouroboros.chatapp.chatapp.serverside.ChatHandler.chatUsersMap;
+import static com.ouroboros.chatapp.chatapp.serverside.ServerBackend.clientWriters;
 
 public class MessageHandler {
     private static final Logger logger = Logger.getLogger(MessageHandler.class.getName());
     public static final List<Message> messages = Collections.synchronizedList(new ArrayList<>());
     public static final AtomicInteger messageIdCounter = new AtomicInteger(1);
+
+
+    public static void fetchDataFromDatabase() {
+        // Whenever the server starts, fetch all messages from the database and continue from there
+        try (Connection conn = DatabaseUtils.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT id, chat_id, sender_id, content, message_type, media_url, created_at, updated_at FROM messages ORDER BY id ASC")) {
+
+            int maxId = 0;
+            while (rs.next()) {
+                // TODO: add more attributes
+                Message msg = new Message();
+                int id = rs.getInt("id");
+                msg.setId(rs.getInt("id"));
+                msg.setChatId(rs.getInt("chat_id"));
+                msg.setSenderId(rs.getInt("sender_id"));
+                msg.setContent(rs.getString("content"));
+                msg.setMessageType(rs.getString("message_type"));
+
+
+                messages.add(msg);
+                if (id > maxId) {
+                    maxId = id;
+                }
+            }
+            messageIdCounter.set(maxId + 1);
+            System.out.println("Fetched " + messages.size() + " messages from database.");
+        } catch (Exception e) {
+            System.err.println("Error fetching messages from database: " + e.getMessage());
+        }
+    }
+
 
     public static void handleRequestMessages(int chatId, BufferedWriter out) {
         synchronized (messages) {
@@ -60,22 +90,40 @@ public class MessageHandler {
                 newMsg.setSenderId(senderId);
                 newMsg.setContent(content);
                 newMsg.setMessageType("TEXT");
-
                 LocalDateTime now = LocalDateTime.now();
                 newMsg.setCreatedAt(now);
                 newMsg.setUpdatedAt(now);
 
-                saveMessageToDatabase(newMsg);
                 // Add the new message to the list
                 messages.add(newMsg);
 
+                // Save the message to the database in a new thread
+                new Thread(() -> saveMessageToDatabase(newMsg)).start();
 
-                // Store the message in the database
+                System.out.println("Hello, sent back to client: " + newMsg.getContent());
+
+                // send notification to the client
                 out.write("start: ADD_NEW_MESSAGE\r\n");
                 out.write("length: 1\r\n");
                 newMsg.sendObject(out);
                 out.write("end: ADD_NEW_MESSAGE\r\n");
                 out.flush();
+
+                /// Handle realtime update message
+                // sent notify to other clients in the chat
+                if (chatUsersMap.get(chatId) != null) {
+                    for (int userIdInChat : chatUsersMap.get(chatId)) {
+                        if (userIdInChat != senderId && clientWriters.get((long) userIdInChat) != null) { // Don't notify the sender
+                            for (BufferedWriter userOut : clientWriters.get((long) userIdInChat)) {
+                                userOut.write("start: ADD_NEW_MESSAGE\r\n");
+                                userOut.write("length: 1\r\n");
+                                newMsg.sendObject(userOut);
+                                userOut.write("end: ADD_NEW_MESSAGE\r\n");
+                                userOut.flush();
+                            }
+                        }
+                    }
+                }
 
                 logger.info("Sent new message with ID: " + newMsg.getId() + " for chat ID: " + chatId);
             } catch (IOException e) {
@@ -90,10 +138,15 @@ public class MessageHandler {
                         "(chat_id, sender_id, content, message_type, created_at, updated_at) " +
                         "VALUES (?, ?, ?, ?, ?, ?)";
 
+
+        System.out.println("chatId: " + message.getChatId());
+        System.out.println("senderId: " + message.getSenderId());
+        System.out.println("content: " + message.getContent());
+
         try (Connection conn = DatabaseUtils.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL)) {
             // Validate required fields
-            if (message.getChatId() <= 0 || message.getSenderId() <= 0 || message.getContent() == null || message.getContent().trim().isEmpty()) {
+            if (message.getChatId() <= 0 || message.getSenderId() <= 0 || message.getContent() == null) {
                 throw new SQLException("Invalid message data: chat_id, sender_id, and content are required");
             }
 
