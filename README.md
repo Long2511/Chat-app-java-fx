@@ -21,7 +21,7 @@
 | ----------- | --------------------------- | ----------------------------------------------- |
 | id          | bigint                      | Primary key                                     |
 | name        | character varying           | Chat name (used for group chats)                |
-| type        | character varying           | e.g. “direct”, “group”                          |
+| type        | character varying           | "GROUP" : "PRIVATE"                             |
 | created\_at | timestamp without time zone | When the chat was first created                 |
 | updated\_at | timestamp without time zone | Last time chat metadata (e.g. name) was changed |
 
