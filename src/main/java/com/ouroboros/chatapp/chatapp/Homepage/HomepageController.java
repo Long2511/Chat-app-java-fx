@@ -6,6 +6,8 @@ import com.ouroboros.chatapp.chatapp.clientside.ChatService;
 import com.ouroboros.chatapp.chatapp.clientside.Toast;
 import com.ouroboros.chatapp.chatapp.datatype.Chat;
 import com.ouroboros.chatapp.chatapp.datatype.User;
+
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -31,6 +33,7 @@ public class HomepageController {
     @FXML private ListView<User> userSearchList;
     @FXML private TextField chatName;
     private User loggedInUser;
+    private List<Chat> fullChatList = new ArrayList<>();
 
     private final javafx.animation.PauseTransition searchDelay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(0.5));
     private String lastSearchText = "";
@@ -110,6 +113,12 @@ public class HomepageController {
     public void setLoggedInUser(User user) {
         this.loggedInUser = user;
         System.out.println("Logged-in user: " + user.getUsername());
+
+        //title of the window
+        Platform.runLater(() -> {
+            Stage stage = (Stage) tabPane.getScene().getWindow();
+            stage.setTitle("Chat Application - " + loggedInUser.getUsername());
+        });
     }
 
     @FXML
@@ -139,7 +148,13 @@ public class HomepageController {
             int chatId = ChatService.createChatGroup(userIds, chatNameStr);
             javafx.application.Platform.runLater(() -> {
                 if (chatId > 0) {
-                    ChatView.openChatView(createButton, chatNameStr, loggedInUser, chatId);
+                    List<User> participants = new ArrayList<>(selectedUsers);
+                    if (!participants.contains(loggedInUser)) {
+                    participants.add(0, loggedInUser);
+                }
+
+                ChatView.openChatView(createButton, chatNameStr, loggedInUser, chatId, participants);
+                    
                 } else {
                     Stage stage = (Stage) chatListView.getScene().getWindow();
                     Toast.show(stage, "Failed to create chat", 4000);
@@ -162,8 +177,8 @@ public class HomepageController {
 
     @FXML
     private void loadChatPreviews() {
-        List<Chat> chats = ChatService.getAllChats((int) loggedInUser.getId());
-        List<ChatPreview> previews = chats.stream().map(chat -> {
+        fullChatList = ChatService.getAllChats((int) loggedInUser.getId());
+        List<ChatPreview> previews = fullChatList.stream().map(chat -> {
             String title;
             if ("GROUP".equals(chat.getType())) {
                 title = chat.getName() != null && !chat.getName().isBlank()
@@ -188,6 +203,16 @@ public class HomepageController {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
                     Scene chatScene = new Scene(loader.load());
                     ChatViewController controller = loader.getController();
+
+                    Chat chat = fullChatList.stream()
+                        .filter(c -> c.getId() == selectedChat.getChatId())
+                        .findFirst()
+                        .orElse(null);
+
+                if (chat != null) {
+                    controller.setParticipants(chat.getParticipants());
+                }
+
                     controller.setChatAndUser(selectedChat.getChatId(), (int) loggedInUser.getId());
                     controller.setChatTitle(selectedChat.getTitle());
                 // Replace the whole scene

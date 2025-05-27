@@ -9,17 +9,21 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.List;
 
 public class ChatView extends Application {
 
-    public static void openChatView(javafx.scene.Node anyNode, String chatNameStr, User user, int chatId) {
+    public static void openChatView(javafx.scene.Node anyNode, String chatNameStr, User user, int chatId, List<User> participants) {
         try {
             FXMLLoader loader = new FXMLLoader(ChatView.class.getResource("/com/ouroboros/chatapp/chatapp/chat-view.fxml"));
             Parent chatView = loader.load();
             ChatViewController controller = loader.getController();
+            
+            controller.setParticipants(participants);
             controller.setChatTitle(chatNameStr);
             controller.setCurrentUser(user);
             controller.setChatId(chatId);
+            
             // Switch the whole scene
             Stage stage = (Stage) anyNode.getScene().getWindow();
             stage.setScene(new Scene(chatView));

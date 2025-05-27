@@ -73,7 +73,7 @@ public class ChatService {
                         }
 
                         chats.add(chat);
-                        System.out.println("Chat received: " + chat.getName());
+                        //System.out.println("Chat received: " + chat.getName());//debug
                     }
                 }
             }

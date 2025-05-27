@@ -22,7 +22,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
-import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import javafx.application.Platform;
 import javafx.stage.Modality;
@@ -92,6 +91,24 @@ public class ChatViewController {
 
     private int currentChatId;
     private int currentUserId;
+
+    private List<User> participants;
+
+    public void setParticipants(List<User> participants) {
+        this.participants = participants;
+    }
+    private String getUsernameById(long senderId) {
+    if (participants == null) return "Unknown";
+    for (User user : participants) {
+        if (user.getId() == senderId) {
+            return user.getUsername();
+        }
+    }
+    return "Unknown";
+}
+
+
+    
 
 
     @FXML
@@ -375,76 +392,96 @@ public class ChatViewController {
      * @param isFromCurrentUser Only used if msgObj is a String. Ignored for Message objects.
      */
     public void addMessageToScroll(Object msgObj, boolean isFromCurrentUser) {
-        if (msgObj instanceof String) {
-            // Handle as simple text message
-            String message = (String) msgObj;
-            TextArea messageArea = new TextArea(message);
-            messageArea.setWrapText(true);
-            messageArea.setEditable(false);
-            messageArea.setPrefRowCount(1);
-            messageArea.setMaxWidth(400);
-            messageArea.getStyleClass().add("message-area");
-            messageArea.getStyleClass().add(isFromCurrentUser ? "current-user-message" : "other-user-message");
-            HBox messageBox = new HBox(messageArea);
-            messageBox.getStyleClass().add("message-box");
-            messageBox.setAlignment(isFromCurrentUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-            messageBox.setMaxWidth(messageScroll.getWidth());
-            // Bind box width instead of snapshot getWidth()
-            messageBox.maxWidthProperty().bind(messageContainer.widthProperty());
-            messageContainer.getChildren().add(messageBox);
-            messageContainer.getStyleClass().add("message-container");
-        } else if (msgObj instanceof Message) {
-            Message msg = (Message) msgObj;
-            if (msg.isFile()) {
-                String filePath = msg.getFileUrl() != null && !msg.getFileUrl().isEmpty()
-                        ? msg.getFileUrl()
-                        : msg.getContent();
-                String fileName = msg.getContent() != null && !msg.getContent().isEmpty()
-                        ? msg.getContent()
-                        : new File(filePath).getName();
-                Hyperlink fileLink = new Hyperlink("📎 " + fileName);
-                fileLink.setStyle("-fx-font-size: 14px; -fx-text-fill: #2a73ff; -fx-underline: false;");
-                fileLink.setOnAction(e -> {
-                    try {
-                        File file = new File(filePath);
-                        if (!file.exists()) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle("File not found");
-                            alert.setHeaderText(null);
-                            alert.setContentText("Cannot open file: " + filePath);
-                            alert.showAndWait();
-                            return;
-                        }
-                        Desktop.getDesktop().open(file);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
+    if (msgObj instanceof String) {
+        // Simple text message
+        String message = (String) msgObj;
+        TextArea messageArea = new TextArea(message);
+        messageArea.setWrapText(true);
+        messageArea.setEditable(false);
+        messageArea.setPrefRowCount(1);
+        messageArea.setMaxWidth(400);
+        messageArea.getStyleClass().add("message-area");
+        messageArea.getStyleClass().add(isFromCurrentUser ? "current-user-message" : "other-user-message");
+        HBox messageBox = new HBox(messageArea);
+        messageBox.getStyleClass().add("message-box");
+        messageBox.setAlignment(isFromCurrentUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        messageBox.maxWidthProperty().bind(messageContainer.widthProperty());
+        messageContainer.getChildren().add(messageBox);
+        messageContainer.getStyleClass().add("message-container");
+
+    } else if (msgObj instanceof Message) {
+        Message msg = (Message) msgObj;
+
+        if (msg.isFile()) {
+            // File message
+            String filePath = msg.getFileUrl() != null && !msg.getFileUrl().isEmpty()
+                    ? msg.getFileUrl()
+                    : msg.getContent();
+            String fileName = msg.getContent() != null && !msg.getContent().isEmpty()
+                    ? msg.getContent()
+                    : new File(filePath).getName();
+            Hyperlink fileLink = new Hyperlink("📎 " + fileName);
+            fileLink.setStyle("-fx-font-size: 14px; -fx-text-fill: #2a73ff; -fx-underline: false;");
+            fileLink.setOnAction(e -> {
+                try {
+                    File file = new File(filePath);
+                    if (!file.exists()) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("File not found");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Cannot open file: " + filePath);
+                        alert.showAndWait();
+                        return;
                     }
-                });
-                VBox fileMessageBox = new VBox(fileLink);
-                fileMessageBox.setSpacing(4);
-                fileMessageBox.setStyle("-fx-background-color: #dbeafe; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
-                HBox container = new HBox(fileMessageBox);
-                container.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-                container.setPadding(new Insets(2, 10, 2, 10));
-                // Optionally bind width for file boxes too
-                container.maxWidthProperty().bind(messageContainer.widthProperty());
-                messageContainer.getChildren().add(container);
-            } else {
-                Label label = new Label(msg.getContent());
-                label.setWrapText(true);
-                label.setStyle("-fx-font-size: 14px; -fx-background-color: #e1ffc7; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
-                HBox textBox = new HBox(label);
-                textBox.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-                textBox.setPadding(new Insets(2, 10, 2, 10));
-                textBox.maxWidthProperty().bind(messageContainer.widthProperty());
-                messageContainer.getChildren().add(textBox);
-            }
+                    Desktop.getDesktop().open(file);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+            VBox fileMessageBox = new VBox(fileLink);
+            fileMessageBox.setSpacing(4);
+            fileMessageBox.setStyle("-fx-background-color: #dbeafe; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+            HBox container = new HBox(fileMessageBox);
+            container.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+            container.setPadding(new Insets(2, 10, 2, 10));
+            container.maxWidthProperty().bind(messageContainer.widthProperty());
+            messageContainer.getChildren().add(container);
+
         } else {
-            throw new IllegalArgumentException("Unsupported message type: " + (msgObj == null ? "null" : msgObj.getClass()));
+            // Text message
+            String senderName = getUsernameById(msg.getSenderId());
+
+            Label nameLabel = new Label(senderName + ":");
+            nameLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 4 0;");
+
+            Label label = new Label(msg.getContent());
+            label.setWrapText(true);
+            label.setStyle("-fx-font-size: 14px; -fx-background-color: #e1ffc7; -fx-padding: 10px 14px; -fx-background-radius: 16px;");
+
+            VBox messageBubble;
+            if (msg.getSenderId() == currentUserId) {
+                messageBubble = new VBox(label); // Không cần hiện tên mình
+            } else {
+                messageBubble = new VBox(nameLabel, label);
+            }
+
+            HBox textBox = new HBox(messageBubble);
+            textBox.setAlignment(msg.getSenderId() == currentUserId ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+            textBox.setPadding(new Insets(2, 10, 2, 10));
+            textBox.maxWidthProperty().bind(messageContainer.widthProperty());
+
+            messageContainer.getChildren().add(textBox);
         }
-        // Scroll to bottom
-        messageScroll.setVvalue(1.0);
+
+    } else {
+        throw new IllegalArgumentException("Unsupported message type: " + (msgObj == null ? "null" : msgObj.getClass()));
     }
+
+    // Scroll to bottom
+    messageScroll.setVvalue(1.0);
+}
+
 
     public void setChatTitle(String username) {
         chatTitle.setText(username);
